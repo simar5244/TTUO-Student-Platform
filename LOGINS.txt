@@ -1,0 +1,30 @@
+TTU ONLINE PORTAL — DEV LOGINS (local testing only)
+====================================================
+
+App URL:          http://localhost:3000
+Admin portal:     http://localhost:3000/admin
+Student portal:   http://localhost:3000/portal
+
+STAFF ACCOUNTS (sign in at /login, then go to /admin)
+----------------------------------------------------
+Superadmin   admin@ttu.edu      AdminPass2026!
+             → full access: users, audit trail, outbox, match/merge
+
+Advisor      advisor@ttu.edu    AdvisorPass2026!
+             → leads, applications, review queue, chat
+             (blocked from match/merge + admin tools — gets 403)
+
+Manager      manager@ttu.edu    ManagerPass2026!
+             → everything advisors can do + match/merge + analytics
+
+STUDENT ACCOUNT
+---------------
+Create your own at /signup — try a real contact from the sample data
+(email + phone both matching = auto-linked; email only = review queue).
+
+MFA DEV CODE
+------------
+424242  (Twilio mock — real codes need TWILIO_* env vars in .env.local)
+
+NOTE: These are development credentials for the LOCAL build only.
+Change/regenerate them before deploying to the server.

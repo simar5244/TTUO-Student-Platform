@@ -1,0 +1,922 @@
+\documentclass[11pt,letterpaper]{report}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=ttured,citecolor=black]{hyperref}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+
+% ---- TTU palette: black, white, minimal red ----
+\definecolor{ttured}{RGB}{204,0,0}
+\definecolor{ink}{RGB}{17,17,17}
+\definecolor{smoke}{RGB}{245,245,245}
+\definecolor{mute}{RGB}{100,100,100}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\onehalfspacing
+
+% chapter styling
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\filleft\large\textcolor{ttured}{PART \thechapter}}{10pt}{\Huge}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.7em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{mute}{TTU Online Admissions Portal}}
+\fancyhead[R]{\small\textcolor{mute}{Technical \& Operational Documentation}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newtcolorbox{keybox}[1]{colback=smoke,colframe=ink,title={#1},fonttitle=\bfseries\small,boxrule=0.8pt,arc=1.5mm,left=6pt,right=6pt,top=5pt,bottom=5pt}
+\newtcolorbox{warnbox}{colback=red!3,colframe=ttured,title={Important},fonttitle=\bfseries\small,boxrule=0.8pt,arc=1.5mm,left=6pt,right=6pt,top=5pt,bottom=5pt}
+\newtcolorbox{plainbox}{colback=white,colframe=mute!40,boxrule=0.6pt,arc=1.5mm,left=6pt,right=6pt,top=5pt,bottom=5pt}
+
+\title{\Huge\bfseries TTU Online Admissions Portal\\[0.4em]
+\Large Complete System Documentation\\[0.3em]
+\normalsize Architecture, Operations, Data Handling \& Security}
+\author{Prepared for April Hollingsworth\\Texas Tech University --- eLearning \& Academic Partnerships}
+\date{\today}
+
+\begin{document}
+
+% ---------- TITLE PAGE ----------
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+{\color{ttured}\rule{\textwidth}{2pt}}\\[1.2em]
+{\Huge\bfseries TTU Online\\[0.15em]Admissions Portal}\\[1em]
+{\Large Complete System Documentation}\\[0.5em]
+{\color{ttured}\rule{\textwidth}{2pt}}\\[2em]
+{\large Architecture, Daily Operations, Data Handling,\\ Identity Matching, and Cybersecurity Measures}\\[2.5em]
+\begin{tabular}{ll}
+\textbf{Prepared for} & April Hollingsworth \\
+\textbf{Department}   & TTU Online, eLearning \& Academic Partnerships \\
+\textbf{Platform}     & Web application (mobile-first, desktop-ready) \\
+\textbf{Database}     & PostgreSQL (\texttt{lumen\_warehouse}) \\
+\textbf{Deployment}   & \texttt{tosmonline0001.ttu.edu} \\
+\textbf{Version}      & 1.0 --- \today \\
+\end{tabular}
+\vfill
+{\color{mute}\small Internal document. Contains operational details --- distribute on a need-to-know basis.}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\chapter{What This System Is}
+
+\section{The Big Picture}
+
+The TTU Online Admissions Portal is a web application that connects three groups
+of people and one very large database:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Prospective students} --- people who filled out a ``Request for
+        Information'' (RFI) form at an event, on the phone, or online. Their
+        details already live in our Salesforce system.
+  \item \textbf{Applicants} --- students who create an account in this portal and
+        actually apply to a TTU Online program, upload documents, and track
+        their progress.
+  \item \textbf{Staff} --- advisors who review transcripts and documents,
+        managers who combine duplicate records, and administrators who oversee
+        the entire operation.
+  \item \textbf{The Salesforce mirror} --- a copy of our Salesforce data that
+        lives in our own PostgreSQL database (\texttt{lumen\_warehouse}) on our
+        server. The portal reads from it constantly, but --- very deliberately ---
+        never writes to it automatically.
+\end{itemize}
+
+\begin{keybox}{In one sentence}
+The portal gives every applicant a clean, mobile-friendly place to apply and
+upload documents, while giving staff a back-office control room where every
+lead, application, document, and decision is visible --- and where every change
+bound for Salesforce is queued for a human to approve by hand.
+\end{keybox}
+
+\section{The Problem It Solves}
+
+Before this portal, the workflow had a painful gap. A person might give us their
+email and phone number at a recruiting event (becoming a ``lead'' in
+Salesforce), then months later apply for a program --- possibly with a different
+name spelling, a new phone number, or a different email address. Salesforce
+would then hold \emph{two} records that belonged to the \emph{same} human, and
+staff had to hunt them down manually.
+
+The portal does three things about this:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item When a student signs up, it \emph{automatically} looks for their
+        existing Salesforce record. A perfect email \emph{and} phone match links
+        instantly. A partial match goes to a staff review queue.
+  \item Staff get a dedicated ``match'' screen to confirm or reject those links,
+        and to manually tie a portal account to a Salesforce record that the
+        computer could not find.
+  \item \textbf{No automatic changes to Salesforce.} Every merge, link, or
+        status change lands in a supervised ``outbox'' that a superadmin
+        reviews and applies one by one.
+\end{enumerate}
+
+\section{What It Looks Like}
+
+The interface is deliberately minimal: black, white, and Texas Tech red used
+only as an accent. Sharp corners, strong typography, and big readable tap
+targets. It is designed phone-first --- most prospective students will open it
+on a phone --- but adapts to a full sidebar layout on desktop monitors.
+
+Two personality touches keep it from feeling like a sterile government form:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Raider Red} appears on the student dashboard in three moods:
+        sitting patiently when you haven't applied yet, pointing you forward
+        while you're working through requirements, and dancing under a rain of
+        digital confetti when everything is done.
+  \item \textbf{Raider Red is also the chat assistant} --- when a student asks a
+        question and no advisor has claimed the conversation yet, a bot persona
+        answers and flags staff to jump in.
+\end{itemize}
+
+\chapter{The People and Their Roles}
+
+\section{Four Levels of Access}
+
+Every person who logs in belongs to exactly one role. The role decides which
+screens exist for them and which actions they can perform.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Role} & \textbf{What they can do} \\
+\midrule
+\textbf{Student} & Apply, upload documents, check requirements, message staff,
+                   see their own linked university record, update their profile. \\
+\textbf{Advisor} & Everything visible in the admin area that involves reading:
+                   leads list, applications list, person profiles, document
+                   review (approve / reject / waive), and live chat. \\
+\textbf{Manager} & Everything an advisor can do, \emph{plus} the match \& merge
+                   screens, status changes (which queue Salesforce work), and
+                   analytics. \\
+\textbf{Administrator} & Everything: staff account creation, role changes,
+                   disabling accounts, the full audit trail, the Salesforce
+                   outbox, and user management. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{keybox}{Why roles matter}
+An advisor who only reviews transcripts has no business merging identity records
+or reading the audit log. Role-based access means each employee sees the
+smallest set of tools needed for their job --- which shrinks both mistakes and
+attack surface if an account is ever compromised.
+\end{keybox}
+
+\section{How Enforcement Works}
+
+Roles are enforced in \emph{two} independent places, not just one:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{At the front door.} Every request to an administrative page is
+        checked before any page code runs at all. A student's browser never even
+        receives the administrative page content --- they are simply redirected
+        to their own portal.
+  \item \textbf{At every action.} Every request that reads or changes data checks
+        the caller's role again. Even if someone crafted a hidden link or typed
+        a URL directly, the server answers \emph{``forbidden''} (HTTP 403).
+\end{enumerate}
+
+This was tested deliberately: advisors attempting manager-only actions, and
+students attempting any administrative action, are all blocked.
+
+\chapter{The Student Journey, Step by Step}
+
+\section{Step 1 --- Signing Up}
+
+A new student visits the portal and creates an account with their email, phone
+number, name, and a password. Three things happen in that single moment:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{The account is created} in our own project tables (a dedicated
+        area of the database called the \texttt{AH} schema --- the project's
+        private workspace inside the shared warehouse).
+  \item \textbf{The password is transformed} into a one-way cryptographic hash.
+        The real password is never stored anywhere --- only a mathematical
+        fingerprint that cannot be turned back into a password.
+  \item \textbf{The identity match runs.} The system quietly compares the email
+        and phone number against nearly fifty thousand sampled Salesforce
+        contacts (and millions in production) to answer one question:
+        \emph{have we heard from this person before?}
+\end{enumerate}
+
+\section{Step 2 --- The Identity Match}
+
+This is the heart of the system. Three outcomes are possible:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Match} & \textbf{Result} & \textbf{What the student sees} \\
+\midrule
+Email + phone both match & \textbf{Auto-linked} & Their existing university
+record appears on the dashboard immediately. \\
+Only one field matches & \textbf{Pending review} & ``We're verifying your
+record'' banner; a human confirms before linking. \\
+Nothing matches & \textbf{Unlinked} & Normal portal; staff can link manually
+later if they discover a duplicate. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{plainbox}
+\textbf{Example.} Maria gave us \texttt{maria.g@gmail.com} and phone
+(806)\,555-0117 at a college fair last spring. This fall she signs up with the
+same email but a new phone number. The system finds the email match, flags the
+phone mismatch, and places the link in the review queue. A manager looks at both
+records side by side, calls Maria to confirm, and clicks \emph{Confirm}. Only
+then is the link made permanent --- and a work item appears in the outbox so a
+superadmin can reconcile the duplicate inside Salesforce itself.
+\end{plainbox}
+
+\section{Step 3 --- The Application}
+
+The student picks three things: a program (drawn live from the real list of
+Texas Tech online degrees and certificates), a start term (Fall 2026, Early
+Fall, Late Fall, Spring, Summer\ldots), and a student type (first-time, transfer,
+graduate, returning). An optional free-text box collects anything else they
+want us to know.
+
+Two small but important details:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item The pickers are \emph{custom-built menus}, not browser-default dropdowns,
+        so they look identical and behave the same on every phone and browser ---
+        including a type-to-search filter for the two-hundred-plus programs.
+  \item The application can be saved as a \textbf{draft} and finished later;
+        \emph{Submit} locks it and starts the clock.
+\end{itemize}
+
+\section{Step 4 --- The Checklist}
+
+Submitting the application creates a personal checklist from a template. Today
+the default template contains six items (application form, government ID,
+transcripts, resume, statement of purpose, application fee); the real
+per-program requirement lists can replace this seed template without any code
+change --- they live in a template table staff can edit.
+
+Each item moves through a life cycle:
+
+\begin{center}
+\texttt{not started} $\rightarrow$ \texttt{in progress} $\rightarrow$
+\texttt{submitted} $\rightarrow$ \texttt{approved} / \texttt{rejected} /
+\texttt{waived}
+\end{center}
+
+Students see a live percentage on their dashboard. Advisors see every submitted
+item in a review queue and mark each one approved, rejected (with a note the
+student can see), or waived.
+
+\section{Step 5 --- Documents}
+
+Students upload files (PDF, JPG, PNG, HEIC, DOC, DOCX --- up to 15\,MB each),
+optionally attached to a specific checklist item. Every upload is:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Verified by content, not by name} --- the server inspects the
+        file's actual bytes (its ``magic bytes'') rather than trusting what the
+        phone claims the file type is.
+  \item \textbf{Renamed to a random identifier} on disk, so an uploaded file can
+        never be executed as a script or reached by guessing a URL.
+  \item \textbf{Encrypted before it hits the disk} (AES-256-GCM --- the same
+        class of encryption used by banks) and decrypted only in memory when an
+        authorized person opens it.
+  \item \textbf{Access-checked} --- a student can open only their own files;
+        staff roles can open anyone's.
+\end{itemize}
+
+\section{Step 6 --- Messaging}
+
+A persistent chat thread connects the student to staff. When a student writes
+and nobody has claimed the conversation, Raider Red (the bot persona) answers
+immediately with a helpful holding message --- or, once the custom knowledge-base
+bot is connected, a real answer. The moment an advisor replies, the thread is
+``claimed'' and the human takes over. Staff see a shared queue of open threads
+on their side.
+
+\section{Step 7 --- Sharing the Moment}
+
+Once an application exists, a \emph{``Tell everyone''} button appears. On a phone
+it opens the native share sheet (so the student can post ``I just applied to TTU
+Online!'' to Instagram or text it to family); on a computer it copies a link to
+the clipboard.
+
+\chapter{The Staff Side: The Admin Portal}
+
+\section{Dashboard}
+
+The admin landing page is a control-room summary: counts of students,
+applications, leads, pending reviews, unread chat, and a live feed of the most
+recent events across the whole system.
+
+\section{Leads}
+
+The leads list is a searchable, filterable window onto every RFI contact in the
+Salesforce mirror --- the same records the recruiting team creates. Staff search
+by name, email, or phone, and filter by lifecycle stage (Prospect, Inquiry,
+Applicant\ldots) and term.
+
+\section{Applications}
+
+Every application known to the system --- both the ones students filed through
+this portal and the ones already sitting in Salesforce --- with status, stage,
+term, program, and record type. Clicking any row opens the person view.
+
+\section{Person 360}
+
+One page per human. It combines:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Salesforce contact fields (name, email, phone, status, term),
+  \item every application on file and its stage,
+  \item every recorded interaction (RFI events, touchpoints),
+  \item the linked portal account, if one exists,
+  \item uploaded documents and checklist state,
+  \item staff notes,
+  \item and that person's own activity on the website --- which pages they
+        visited and how much time they spent.
+\end{itemize}
+
+This is where an advisor can answer, in seconds, ``who is this person and where
+are they in the process?''
+
+\section{Match \& Merge}
+
+The manager-facing screen has three lanes:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Pending review} --- partial matches awaiting a human yes/no,
+        with both records shown side by side and exactly which fields matched
+        highlighted.
+  \item \textbf{Unlinked users} --- portal accounts with no Salesforce match,
+        each with the system's best-guess candidate contacts attached.
+  \item \textbf{Auto-linked} --- the perfect matches that linked themselves, so
+        staff can spot-check that automation behaved.
+\end{enumerate}
+
+\begin{warnbox}
+Confirming a link or requesting a merge does \textbf{not} modify Salesforce.
+It writes a work item into the outbox. A superadmin applies each change by
+hand, one at a time, inside Salesforce proper.
+\end{warnbox}
+
+\section{Review Queue}
+
+A single inbox of everything waiting on a human: submitted checklist items and
+freshly uploaded documents. Approve, reject (with a note the student sees), or
+waive --- every click is recorded with the advisor's name.
+
+\section{Status Changes and the Outbox}
+
+When a manager changes an application's status --- say, from \emph{submitted} to
+\emph{under review} or \emph{admitted} --- two writes happen:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item the portal's own copy is updated so the student sees progress instantly;
+  \item a row is appended to the \textbf{outbox} describing exactly what must be
+        mirrored into Salesforce.
+\end{enumerate}
+
+The outbox is a screen of pending work items for the superadmin: entity, action,
+payload, who requested it, and when. Each item can be marked \emph{done} or
+\emph{skipped} with a note. This is the deliberate air-gap between the public
+website and the institutional system of record: \textbf{the website cannot
+change Salesforce; only a human can.}
+
+\section{Live Chat}
+
+The staff console lists every open student conversation, shows the last message
+and whether Raider Red is still holding the thread, and lets any advisor claim,
+reply, or close. Replying automatically claims the thread.
+
+\section{Users \& Roles}
+
+Administrators create staff accounts, change roles, and disable accounts. A
+disabled account is locked out immediately at every layer.
+
+\section{Audit Trail}
+
+Every meaningful thing that happens is written to an append-only activity table
+with the actor, the action, the detail, the IP address, the browser, and the
+timestamp:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item every page view and click by \emph{both} students and employees,
+  \item every login, logout, failed login, MFA failure, and password reset
+        (flagged as security events),
+  \item every admin action --- reviews, merges, status changes, chat replies,
+  \item and time-on-site per user, powering the analytics screen.
+\end{itemize}
+
+The audit view is admin-only and exists for exactly the questions ``who did
+this?'' and ``what was this employee doing at 2\,pm yesterday?''
+
+\section{Analytics}
+
+A daily event chart, the most-visited pages, and per-user time-on-site --- the
+``how much time did a student spend on the site'' requirement made visible.
+
+\chapter{Where the Data Lives}
+
+\section{Two Schemas, Two Responsibilities}
+
+Everything sits in one PostgreSQL database called \texttt{lumen\_warehouse},
+divided into clearly separated areas (``schemas''):
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Schema} & \textbf{Contents} \\
+\midrule
+\texttt{sf\_origin} & The Salesforce mirror: contacts (3.5M), applications
+(470K), interactions (4.3M), accounts, terms, programs, record types. The portal
+\textbf{reads} this schema and \textbf{never writes} to it. \\
+\texttt{AH} & The project's own tables: portal users, sessions, identity links,
+portal applications, checklists, documents, chat, notes, audit log, outbox. This
+is the only place the portal writes. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+This separation is the project's most important architectural rule. It means the
+portal can never corrupt the institutional data --- its writes are physically
+confined to its own schema, and in production the database account will be
+granted \emph{read-only} permission on \texttt{sf\_origin} as a second,
+belt-and-suspenders layer.
+
+\section{The Key Tables, in Plain Language}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Table (in \texttt{AH})} & \textbf{What it holds} \\
+\midrule
+\texttt{portal\_users} & Accounts: email, hashed password, role, MFA flag,
+failed-login counter, lock timestamp. \\
+\texttt{portal\_sessions} & Active sign-ins: who, when, from which IP/device,
+expiry. \\
+\texttt{portal\_otp} & Text-message codes: stored as hashes, 10-minute life,
+5-try limit. \\
+\texttt{portal\_identity\_links} & The bridge: which portal account belongs to
+which Salesforce contact, how it matched, who reviewed it. \\
+\texttt{portal\_applications} & Applications filed in the portal (program, term,
+status, answers). \\
+\texttt{portal\_checklist\_items} & Each applicant's requirement list and its
+state. \\
+\texttt{portal\_checklist\_templates} & The editable requirement lists per
+program/term --- where the real admissions requirements will live. \\
+\texttt{portal\_documents} & Document metadata (the files themselves live,
+encrypted, on disk). \\
+\texttt{portal\_chat\_threads/messages} & Conversations with advisors and the bot. \\
+\texttt{portal\_outbox} & The queue of changes a superadmin must apply to
+Salesforce by hand. \\
+\texttt{portal\_activity} & The audit trail: every click, page, login, and admin
+action. \\
+\texttt{portal\_notes} & Staff notes attached to people. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{How Sync Works --- Slowly, On Purpose}
+
+The user asked for one rule above all: \emph{do not let the app mutate the
+warehouse on its own}. The system honors it in three ways:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Reads are free.} Leads, programs, terms, applications --- the
+        portal queries the mirror directly, so students and staff always see
+        current data.
+  \item \textbf{Writes stay local.} Anything that changes state lands in
+        \texttt{AH} tables instantly (the portal is always truthful about the
+        portal).
+  \item \textbf{Salesforce changes queue as tickets.} Status flips, merges, and
+        link confirmations each write an outbox row: \emph{entity, action,
+        payload, requester, timestamp}. The superadmin works the queue one item
+        at a time and marks each done.
+\end{enumerate}
+
+\begin{keybox}{Why a queue instead of a direct sync}
+Because identity is messy. If the app merged two Salesforce records
+automatically and got it wrong, un-merging inside Salesforce is a nightmare of
+re-parenting related objects. A human approving each merge costs minutes and
+prevents disasters --- the right trade at 200--300 daily users.
+\end{keybox}
+
+\chapter{Cybersecurity, Explained for Non-Engineers}
+
+\section{The Layer Cake}
+
+Security here is not one lock but a stack of independent defenses --- if any one
+layer fails, the next still holds. What follows is every layer, in plain terms.
+
+\section{Layer 1 --- Passwords}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Passwords are hashed with \textbf{scrypt} at deliberately expensive
+        settings (roughly 128\,MB of memory work per attempt). Guessing a
+        password by brute force takes a real fraction of a second \emph{per
+        guess} --- fast enough for one login, impossibly slow for billions of
+        guesses.
+  \item A \textbf{server-side pepper} (a secret string mixed in before hashing,
+        held only in server configuration --- never in the database) means that
+        even an attacker who steals the entire user table still cannot test
+        guesses without also stealing the server environment.
+  \item Password rules: at least 10 characters, must include a letter and a
+        number, cannot be a common password, cannot contain the user's own
+        email.
+  \item Old password hashes upgrade silently --- when a user with an older hash
+        format logs in successfully, their password is re-hashed at the new
+        standard automatically.
+  \item Login is \textbf{timing-safe}: the same amount of hashing work happens
+        whether or not the email exists, so an attacker cannot probe ``is this
+        email registered?'' by measuring response time.
+\end{itemize}
+
+\section{Layer 2 --- Multi-Factor Authentication}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item MFA uses \textbf{Twilio Verify} --- codes are generated and checked by
+        Twilio, the industry-standard service, not by us.
+  \item Codes expire in \textbf{10 minutes} and allow at most \textbf{5 attempts}
+        per challenge.
+  \item Only a \emph{hash} of each code is ever stored in our database.
+  \item The portal records every failed MFA attempt as a security event in the
+        audit log.
+  \item In development (no Twilio keys configured) a fixed code
+        \texttt{424242} is used --- production prints a loud startup warning if
+        Twilio keys are ever missing.
+\end{itemize}
+
+\section{Layer 3 --- Sessions (Staying Logged In)}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item A login creates a signed token (like a tamper-proof wristband) stored in
+        a cookie that JavaScript cannot read (\texttt{httpOnly}), that only
+        travels on encrypted connections in production (\texttt{secure}), and
+        that is never sent to other websites (\texttt{sameSite}).
+  \item Every session also has a row in the database with its expiry, IP, and
+        device --- so sessions can be revoked instantly.
+  \item Changing a password \textbf{kills every existing session} for that
+        account. A stolen laptop stops being logged in the moment the password
+        is reset.
+  \item Sessions expire in 7 days regardless.
+\end{itemize}
+
+\section{Layer 4 --- Rate Limiting (Brute-Force Armor)}
+
+Every sensitive doorway has a speed limit. Exceed it and the server answers
+``slow down'' (HTTP 429) with a retry timer:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Action} & \textbf{Limit} \\
+\midrule
+Login attempts            & 10 per 5 minutes (per IP), \emph{plus} 5 failures $\Rightarrow$ 15-min account lock \\
+Account creation          & 5 per hour (per IP) \\
+Password reset requests   & 5 per hour (per IP) + 3 per hour per email \\
+MFA code checks           & 10 per 5 minutes \\
+Document uploads          & 20 per 10 minutes \\
+Chat messages             & 60 per minute \\
+Activity tracking pings   & 120 per minute \\
+Everything else           & 240 per minute \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{plainbox}
+\textbf{What this prevents.} An attacker who wants to try ten thousand passwords
+against one account hits the lock at \emph{five}. Someone trying to create
+thousands of fake accounts stops at five per hour per IP. It converts
+unlimited-force attacks into mere annoyances.
+\end{plainbox}
+
+\section{Layer 5 --- Forgery Protection (CSRF \& CORS)}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Every request that \emph{changes} something must arrive with an
+        \texttt{Origin} header matching our own site. A malicious page on
+        another domain cannot silently make your browser submit forms here ---
+        its requests are refused outright. (Verified: requests forged from a
+        foreign origin get a 403.)
+  \item No ``CORS'' permissions are granted at all: other websites' JavaScript
+        simply cannot read our API responses.
+  \item Cross-origin isolation headers (\texttt{Cross-Origin-Opener-Policy},
+        \texttt{Cross-Origin-Resource-Policy}) prevent other tabs from sharing a
+        window or loading our authenticated resources.
+\end{itemize}
+
+\section{Layer 6 --- Security Headers}
+
+Every response carries a set of instructions that harden the browser itself:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Header} & \textbf{In plain terms} \\
+\midrule
+Content-Security-Policy & ``Only run scripts/styles/images from this site ---
+nothing external is allowed to execute.'' Blunts injected-script attacks. \\
+Strict-Transport-Security & ``Always use HTTPS with this site for the next two
+years --- never fall back to plain HTTP.'' \\
+X-Frame-Options / frame-ancestors & ``Never let this site be embedded in a
+frame'' --- defeats clickjacking overlays. \\
+X-Content-Type-Options & ``Don't guess file types'' --- a file we call an image
+can never be reinterpreted as code. \\
+Referrer-Policy & Pages don't leak full URLs to third parties. \\
+Permissions-Policy & Camera, microphone, and location are disabled --- the app
+never asks for them. \\
+Cache-Control: no-store & Authenticated pages and API answers are never saved
+in browser or proxy caches. \\
+X-Robots-Tag: noindex & Search engines are told not to index portal/admin/API
+pages. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The framework also hides its own name (\texttt{poweredByHeader} is off) ---
+there's no reason to advertise the exact software stack to scanners.
+
+\section{Layer 7 --- Injection Defense}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{SQL injection is structurally impossible} in the current code:
+        every query sends user data to the database \emph{separately} from the
+        command, as parameters --- the database never interprets a name or
+        email as a command.
+  \item \textbf{Cross-site scripting (XSS)} is handled by the framework's
+        escaping plus the strict CSP above; user text is rendered as text,
+        never as HTML.
+  \item \textbf{Every input is capped}: emails, names, notes, and chat bodies
+        are trimmed to sane lengths so nobody can flood a field with a
+        megabyte of junk.
+  \item \textbf{Path traversal is double-checked}: document downloads validate
+        that the requested ID is a well-formed UUID, that the stored filename is
+        one we generated (not something containing ``\texttt{../}''), and that
+        the resolved file path really is inside the upload directory.
+\end{itemize}
+
+\section{Layer 8 --- Files (Documents)}
+
+The riskiest feature of any admissions portal is file upload. The defenses:
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Extension allowlist} --- only PDF, JPG, PNG, HEIC, DOC, DOCX.
+  \item \textbf{Magic-byte inspection} --- the first bytes of the file must
+        actually be a real PDF/image/document signature. A script renamed
+        \texttt{transcript.pdf} is rejected.
+  \item \textbf{Random storage names} --- the file lands on disk under a UUID
+        filename in a folder outside the public web directory. It can never be
+        addressed by URL or executed.
+  \item \textbf{Encryption at rest} --- AES-256-GCM before writing; the server
+        decrypts only in memory when an authorized viewer opens it.
+  \item \textbf{Ownership checks on every download} --- a student can open only
+        their own files; staff roles can open all. Verified: a second student
+        attempting to open someone else's document gets 403.
+  \item \textbf{Size cap} --- 15\,MB, enforced server-side.
+  \item \textbf{Rate limit} --- 20 uploads per 10 minutes.
+\end{enumerate}
+
+\section{Layer 9 --- Encryption in Transit}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Between browser and server: HTTPS only. The session cookie refuses to
+        travel unencrypted, and HSTS pins the site to TLS for two years.
+  \item Between application and database: TLS is supported via standard
+        PostgreSQL SSL modes (\texttt{sslmode=verify-full}) when the two live on
+        separate hosts; on one host, connections never leave the machine.
+\end{itemize}
+
+\section{Layer 10 --- Watching Everything (Audit)}
+
+Every login, failed login, MFA failure, password reset, page view, click,
+upload, review decision, merge, and status change lands in the audit table with
+who/what/where/when. Security-sensitive events are tagged distinctly so the
+audit screen can filter for them. This is both a compliance control and a
+detection tool --- unusual patterns (many failed logins, an employee suddenly
+bulk-viewing records) are visible in one place.
+
+\section{Layer 11 --- Boot-Time Safety Checks}
+
+At startup in production, the server \emph{refuses to boot} if the session
+secret is missing or weak, and prints loud warnings if encryption keys, the
+password pepper, or Twilio credentials are absent --- so the app can never
+silently drift into an insecure configuration.
+
+\section{The Deliberate Air-Gap}
+
+The deepest security property isn't cryptographic at all: \textbf{the app has no
+code path that writes to the Salesforce mirror}. It's not that writes are
+restricted --- they don't exist. Even a fully compromised application process
+cannot alter institutional records; at worst it could queue outbox tickets a
+human would review.
+
+\chapter{Running the System Day to Day}
+
+\section{What Staff Do Each Morning}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{Advisors} open the review queue, work through submitted
+        checklist items and documents (approve / reject-with-note / waive), and
+        watch the chat console for new conversations.
+  \item \textbf{Managers} check the match queue: confirm or reject pending
+        identity links, manually link the stragglers, and move applications
+        through their statuses --- knowing every flip also writes an outbox
+        ticket.
+  \item \textbf{Administrators} review the audit trail for anomalies, manage
+        staff accounts, and work the outbox: applying each queued change in
+        Salesforce by hand and marking it done.
+\end{enumerate}
+
+\section{The Normal Data Flow}
+
+\begin{plainbox}
+\textbf{End-to-end example --- RFI to admit:}
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+  \item Recruiter collects an RFI at an event $\rightarrow$ Salesforce lead
+        appears in the mirror (read-only to the portal).
+  \item Student signs up on their phone $\rightarrow$ identity match links them
+        (or queues for review).
+  \item Student picks program + term $\rightarrow$ application created in
+        \texttt{AH}, checklist materializes.
+  \item Student uploads transcript $\rightarrow$ file encrypted, checklist item
+        flips to \emph{submitted}, advisor sees it in the queue.
+  \item Advisor approves item; manager flips status $\rightarrow$ portal updates,
+        outbox ticket queued.
+  \item Superadmin opens the outbox, applies the status in Salesforce, marks the
+        ticket done. Both systems agree --- and a human certified every step.
+\end{enumerate}
+\end{plainbox}
+
+\section{Capacity}
+
+The workload assumptions baked into the design (200--300 users/day, 2,000--5,000
+per month) are modest by web standards. The database connection pool (8
+connections), in-memory rate limiter, and polling chat are sized for exactly
+this scale --- nothing in the design bottlenecks until orders of magnitude more
+traffic. The one component that \emph{will} want upgrading first at scale is the
+chat's 2.5-second polling, which can become server-sent events or websockets
+later without changing the user experience.
+
+\chapter{Deployment Plan for \texttt{tosmonline0001.ttu.edu}}
+
+\section{The Shape of Production}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{One server} running the Node.js application, PostgreSQL, and a
+        reverse proxy (nginx or Apache) in front --- no containers, per project
+        requirements.
+  \item \textbf{HTTPS} terminated at the proxy with a real certificate (TTU
+        issued or Let's Encrypt), redirecting all plain HTTP to TLS.
+  \item \textbf{Database privileges}: the application connects as a dedicated
+        role that can read \texttt{sf\_origin} and read/write only the
+        \texttt{AH} portal tables --- write access to the mirror simply does not
+        exist at the permission level.
+  \item \textbf{Fresh secrets}: new \texttt{SESSION\_SECRET},
+        \texttt{PASSWORD\_PEPPER}, and \texttt{DOC\_ENC\_KEY} generated on the
+        server, plus real \texttt{TWILIO\_*} credentials.
+  \item \textbf{Uploads} on an encrypted volume outside the web root.
+  \item \textbf{Firewall}: only 443/80 and SSH open; Postgres bound to
+        localhost.
+\end{itemize}
+
+\begin{warnbox}
+\textbf{Before launch:} the dev values currently in \texttt{.env.local}
+(passwords, pepper, encryption key) must be regenerated on the server, and the
+dev MFA code \texttt{424242} disappears automatically once Twilio keys are set.
+\end{warnbox}
+
+\section{Go-Live Checklist}
+
+\begin{enumerate}[leftmargin=1.6em]
+  \item Generate all secrets fresh on the server.
+  \item Point \texttt{DATABASE\_URL}/\texttt{WAREHOUSE\_URL} at the production
+        Postgres with SSL required.
+  \item Create the least-privilege DB role and grant: \texttt{SELECT} on
+        \texttt{sf\_origin}, full rights on \texttt{AH.portal\_*}.
+  \item Run the schema migration (creates all \texttt{AH} tables).
+  \item Configure the reverse proxy: TLS, \texttt{X-Forwarded-For} pass-through,
+        HTTP$\rightarrow$HTTPS redirect.
+  \item Create the first superadmin account; create staff via the admin UI.
+  \item Smoke-test: headers present, secure cookie set, forged-origin request
+        refused, 6th bad login throttled, a file upload round-trips encrypted.
+  \item Load the real requirement lists into
+        \texttt{portal\_checklist\_templates} (replaces the seed defaults).
+  \item Point \texttt{BOT\_ENDPOINT} at the custom knowledge-base bot.
+\end{enumerate}
+
+\section{What Happens If Something Breaks}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Scenario} & \textbf{Result} \\
+\midrule
+Database unreachable & Pages error cleanly; no data is fabricated; the pool
+reconnects automatically. \\
+Twilio outage & OTP sends fail; the user sees an error; sessions already active
+are unaffected. \\
+Upload disk fills & New uploads refuse with an error; nothing else degrades. \\
+Rate-limit false positive & The legit user waits out the \texttt{Retry-After}
+window (minutes), not a ban. \\
+Forgotten admin password & Another admin can reset it; a superadmin can update
+the user row directly. \\
+Server reboot & Sessions survive (they live in the database); the app restarts
+via systemd. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\chapter{Open Items \& Known Trade-offs}
+
+\section{Still To Receive / Decide}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{The real requirement lists} per program/term --- the checklist
+        tables are ready; only the content is missing.
+  \item \textbf{Twilio production keys} for live SMS MFA.
+  \item \textbf{The custom chatbot endpoint} (\texttt{BOT\_ENDPOINT}) ---
+        wire-in point is ready: the portal posts the message and user context,
+        expects a reply string.
+  \item \textbf{Database role details} for production (which account owns
+        \texttt{AH}, what to grant).
+  \item \textbf{Lead definition} --- currently ``all prospective-student
+        contacts''; if the business definition of a lead is narrower, the
+        filter is a one-line change.
+\end{itemize}
+
+\section{Honest Limitations}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Chat polls} every 2.5 seconds rather than pushing instantly ---
+        invisible to users at this scale, but worth upgrading to websockets if
+        the staff queue grows busy.
+  \item \textbf{Rate limits live in server memory} --- correct for one machine;
+        if the app ever runs on two machines simultaneously they would need a
+        shared store (the database table is a drop-in).
+  \item \textbf{JWT role staleness} --- a staff member whose role is reduced
+        keeps their old role until their next login (max 7 days). Immediate
+        revocation happens by disabling the account or deleting their session
+        row.
+  \item \textbf{Full-disk encryption} of the database volume is an
+        OS-level server task, not something the application can do for itself.
+\end{itemize}
+
+\chapter*{Glossary}
+\addcontentsline{toc}{chapter}{Glossary}
+
+\begin{description}[leftmargin=1.4em,style=nextline]
+  \item[RFI] Request For Information --- the first contact a prospect makes
+  (event signup, call, web form), which becomes a Salesforce lead.
+  \item[Lead] A prospective student in Salesforce who has not yet applied.
+  \item[Salesforce mirror] A copy of our Salesforce data synchronized into our
+  own database for fast querying.
+  \item[Schema] A named compartment inside a database that keeps tables
+  organized --- \texttt{sf\_origin} holds Salesforce data, \texttt{AH} holds
+  ours.
+  \item[Identity link] The recorded connection between a portal account and a
+  Salesforce contact.
+  \item[Outbox] The queue of pending changes a superadmin applies to Salesforce
+  manually --- the bridge between the app and the system of record.
+  \item[Hash] A one-way fingerprint of a password --- can verify a guess, can
+  never reveal the original.
+  \item[Pepper] A secret mixed into every password hash, stored only in server
+  configuration.
+  \item[MFA/OTP] Multi-Factor Authentication / One-Time Passcode --- the texted
+  code that proves you also control your phone.
+  \item[Session] The signed cookie that keeps you logged in between page loads.
+  \item[Rate limit] A speed limit on requests that stops brute-force attacks.
+  \item[CSRF] An attack where another website tricks your browser into
+  submitting actions on our site --- blocked via origin checks.
+  \item[CSP] Content-Security-Policy --- a whitelist telling the browser exactly
+  which scripts and resources may run.
+  \item[HSTS] The instruction that tells browsers ``HTTPS only, forever.''
+  \item[AES-256-GCM] The encryption algorithm protecting uploaded documents at
+  rest --- the same standard used for classified traffic.
+  \item[Magic bytes] The identifying bytes at the start of a real file (a true
+  PDF always begins \texttt{\%PDF}) --- used to detect faked uploads.
+  \item[Least privilege] Every account gets only the access its job requires.
+  \item[RBAC] Role-Based Access Control --- permissions follow the role, not the
+  person.
+\end{description}
+
+\end{document}
