@@ -6,14 +6,24 @@ import { PageHeader, Card, Pill, Empty, Button, statusTone, Spinner } from "@/co
 import { Dropdown } from "@/components/Dropdown";
 import { IconDoc, IconUpload, IconDownload } from "@/components/icons";
 
-type Doc = { id: string; filename: string; mime: string; size: number; status: string; note: string | null; uploaded_at: string; item_label: string | null };
-type Item = { id: string; label: string; status: string };
+type Doc = { id: string; filename: string; mime: string; size: number; status: string; note: string | null; uploaded_at: string; item_label: string | null; req_key: string | null };
+type Item = { id: string; key: string | null; label: string; status: string; sf?: boolean };
+
+const STATUS_TEXT: Record<string, string> = {
+  pending_review: "pending review",
+  pushed: "sent to TTU",
+  approved: "received by TTU",
+  rejected: "needs attention",
+};
 
 function Documents() {
   const params = useSearchParams();
   const [docs, setDocs] = useState<Doc[] | null>(null);
   const [items, setItems] = useState<Item[]>([]);
-  const [item, setItem] = useState(params.get("item") || "");
+  // selection: "local:<uuid>" | "sf:<id>:<req>" | ""
+  const [sel, setSel] = useState(
+    params.get("sf_item") ? `sf:${params.get("sf_item")}:${params.get("req") ?? ""}`
+    : params.get("item") ? `local:${params.get("item")}` : "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -21,7 +31,8 @@ function Documents() {
   const load = () => fetch("/api/documents").then((r) => r.json()).then((d) => setDocs(d.documents ?? []));
   useEffect(() => {
     load();
-    fetch("/api/checklist").then((r) => r.json()).then((d) => setItems((d.items ?? []).filter((i: Item) => !["approved","waived"].includes(i.status))));
+    fetch("/api/checklist").then((r) => r.json())
+      .then((d) => setItems((d.items ?? []).filter((i: Item) => !["approved", "waived"].includes(i.status))));
   }, []);
 
   async function upload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -30,7 +41,12 @@ function Documents() {
     setBusy(true); setErr("");
     const fd = new FormData();
     fd.append("file", file);
-    if (item) fd.append("item", item);
+    if (sel.startsWith("local:")) fd.append("item", sel.slice(6));
+    else if (sel.startsWith("sf:")) {
+      const [, id, req] = sel.split(":");
+      fd.append("sf_item", id);
+      if (req) fd.append("req_key", req);
+    }
     const r = await fetch("/api/documents", { method: "POST", body: fd });
     const d = await r.json();
     setBusy(false);
@@ -43,17 +59,19 @@ function Documents() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Documents" sub="PDF, JPG, PNG or DOCX · 15MB max" />
+      <PageHeader title="Documents" sub="PDF, JPG, PNG or DOCX · 15MB max · uploads are reviewed by an advisor, then sent to Texas Tech" />
 
       <Card className="space-y-3 p-4">
         <Field2 label="Attach to requirement (optional)">
-          <Dropdown value={item} onChange={setItem} placeholder="General document"
-            options={[{ value: "", label: "General document" }, ...items.map((i) => ({ value: i.id, label: i.label }))]} />
+          <Dropdown value={sel} onChange={setSel} placeholder="General document"
+            options={[{ value: "", label: "General document" },
+              ...items.map((i) => ({ value: i.sf ? `sf:${i.id}:${i.key ?? ""}` : `local:${i.id}`, label: i.label }))]} />
         </Field2>
         <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.doc,.docx" className="hidden" onChange={upload} />
         <Button onClick={() => fileRef.current?.click()} disabled={busy} className="w-full sm:w-auto">
           {busy ? <Spinner /> : <><IconUpload width={15} height={15} /> Choose file</>}
         </Button>
+        <p className="text-xs text-mute">Documents you already submitted on RaiderConnect show up on your checklist automatically.</p>
         {err && <p className="text-sm text-accent">{err}</p>}
       </Card>
 
@@ -70,7 +88,7 @@ function Documents() {
               </div>
               {d.note && <div className="mt-0.5 text-xs text-accent">{d.note}</div>}
             </div>
-            <Pill tone={statusTone(d.status)}>{d.status}</Pill>
+            <Pill tone={statusTone(d.status)}>{STATUS_TEXT[d.status] ?? d.status}</Pill>
             <a href={`/api/files/${d.id}`} target="_blank" className="grid h-9 w-9 place-items-center rounded-md border border-line hover:border-ink" aria-label="Open">
               <IconDownload width={15} height={15} />
             </a>

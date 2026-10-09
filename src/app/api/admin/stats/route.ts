@@ -1,12 +1,12 @@
 import { requireApiUser, isResp, json } from "@/lib/api";
-import { q, ah, sf } from "@/lib/db";
+import { q, ah } from "@/lib/db";
 
 export async function GET() {
   const user = await requireApiUser(["advisor", "manager", "admin"]);
   if (isResp(user)) return user;
 
   const [funnel, pendingLinks, reviewItems, reviewDocs, openChats, outbox, students, recentActivity] = await Promise.all([
-    q(`SELECT "TargetX_SRMb__Status__c" AS k, count(*)::int AS n FROM ${sf("contact")} WHERE "TargetX_SRMb__Status__c" IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 8`),
+    q(`SELECT status AS k, count(*)::int AS n FROM ${ah("sf_contact")} WHERE status IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 8`),
     q(`SELECT count(*)::int AS n FROM ${ah("portal_identity_links")} WHERE status='pending_review'`),
     q(`SELECT count(*)::int AS n FROM ${ah("portal_checklist_items")} WHERE status='submitted'`),
     q(`SELECT count(*)::int AS n FROM ${ah("portal_documents")} WHERE status='uploaded'`),

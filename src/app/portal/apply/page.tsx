@@ -1,100 +1,176 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader, Card, Field, Button, Pill, Spinner, statusTone } from "@/components/ui";
 import { Dropdown } from "@/components/Dropdown";
 import { Loading } from "@/components/Loading";
 
-type Meta = { terms: { id: string; name: string }[]; programs: { id: string; name: string; degree: string; college: string }[]; studentTypes: string[] };
+type Meta = {
+  terms: { id: string; name: string }[];
+  rcPrograms: { label: string; modality: string; level: string; degree: string | null; sort: number }[];
+};
+type PortalApp = {
+  id: string; status: string; rc_program: string | null; modality: string | null;
+  term: string | null; term_id: string | null; sf_application_id: string | null;
+};
 
+// Applying happens on RaiderConnect (the official TTU Online form — Salesforce
+// blocks framing it, so we hand off in the same tab and detect the application
+// when it lands). This page = pick program/term, jump over, then watch for the
+// app to appear on the student's linked contact.
 export default function ApplyPage() {
-  const router = useRouter();
   const [meta, setMeta] = useState<Meta | null>(null);
-  const [existing, setExisting] = useState<Record<string, string> | null>(null);
-  const [f, setF] = useState({ program_id: "", term_id: "", student_type: "", about: "" });
+  const [app, setApp] = useState<PortalApp | null>(null);
+  const [linked, setLinked] = useState<boolean | null>(null);
+  const [f, setF] = useState({ program: "", modality: "8-week", term_id: "" });
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [msg, setMsg] = useState("");
+  const poll = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  async function loadMe() {
+    const d = await fetch("/api/me").then((r) => r.json());
+    setLinked(!!d.link?.sf_contact_id);
+    if (d.portalApplication) {
+      setApp(d.portalApplication);
+      if (d.portalApplication.rc_program && !f.program)
+        setF((p) => ({ ...p, program: d.portalApplication.rc_program, modality: d.portalApplication.modality || "8-week", term_id: d.portalApplication.term_id || "" }));
+    }
+  }
   useEffect(() => {
     fetch("/api/meta").then((r) => r.json()).then(setMeta);
-    fetch("/api/me").then((r) => r.json()).then((d) => {
-      if (d.portalApplication) {
-        setExisting(d.portalApplication);
-        setF({
-          program_id: d.portalApplication.program_id || "",
-          term_id: d.portalApplication.term_id || "",
-          student_type: d.portalApplication.student_type || "",
-          about: d.portalApplication.answers?.about || "",
-        });
+    loadMe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const submitted = !!app && !!app.sf_application_id;
+  const waiting = !!app && !submitted && ["rc_started", "draft"].includes(app.status);
+
+  // auto-check every 30s while waiting + whenever the tab refocuses
+  async function detect(quiet = false) {
+    if (!quiet) setChecking(true);
+    try {
+      const d = await fetch("/api/applications", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "detect" }),
+      }).then((r) => r.json());
+      if (d.detected) {
+        setMsg("");
+        loadMe();
+        if (poll.current) { clearInterval(poll.current); poll.current = null; }
+      } else if (!quiet) {
+        setMsg(d.reason === "not_linked"
+          ? "We haven't matched your Salesforce record yet — an advisor will link it, or check again shortly."
+          : "Not seeing it yet — Salesforce can take a few minutes. Try again in a bit.");
       }
-    });
-  }, []);
+    } finally { setChecking(false); }
+  }
+  useEffect(() => {
+    if (!waiting) return;
+    const onFocus = () => detect(true);
+    window.addEventListener("focus", onFocus);
+    poll.current = setInterval(() => detect(true), 30_000);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      if (poll.current) clearInterval(poll.current);
+    };
+  }, [waiting]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!meta) return <Loading label="Loading programs" />;
 
-  const program = meta?.programs.find((p) => p.id === f.program_id);
-  const term = meta?.terms.find((t) => t.id === f.term_id);
-  const locked = !!(existing && existing.status !== "draft");
+  const programs = meta.rcPrograms.filter((p) => p.modality === f.modality);
+  const term = meta.terms.find((t) => t.id === f.term_id);
 
-  async function save(submit: boolean) {
+  async function go() {
     setBusy(true); setMsg("");
     const r = await fetch("/api/applications", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        program_id: f.program_id, program_name: program?.name, degree: program?.degree,
-        term_id: f.term_id, term: term?.name, student_type: f.student_type,
-        answers: { about: f.about }, submit,
-      }),
+      body: JSON.stringify({ action: "intent", program_label: f.program, modality: f.modality, term: term?.name, term_id: f.term_id || null }),
     });
     const d = await r.json();
     setBusy(false);
     if (!r.ok) return setMsg(d.error || "Something went wrong");
-    if (submit) { router.push("/portal/checklist"); router.refresh(); }
-    else setMsg("Draft saved.");
+    setApp({ ...(app as PortalApp), status: "rc_started", rc_program: f.program, modality: f.modality, term: term?.name ?? null, term_id: f.term_id, sf_application_id: null, id: d.id });
+    window.location.assign(d.rcUrl); // same tab — it should feel like one flow
   }
 
   return (
     <div className="space-y-5">
-      <PageHeader title={locked ? "Your application" : "Application"} sub={locked ? "Submitted — contact an advisor for changes." : "Pick your program and term. You can save a draft and come back."} />
+      <PageHeader title="Apply" sub="Applications are completed on RaiderConnect — Texas Tech's official application system." />
 
-      {locked && (
-        <Card className="flex items-center justify-between p-4">
-          <div className="text-sm font-medium">Status</div>
-          <Pill tone={statusTone(existing!.status)}>{existing!.status}</Pill>
+      {submitted && (
+        <Card className="space-y-3 p-5">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">Application found</div>
+            <Pill tone={statusTone("approved")}>in Salesforce</Pill>
+          </div>
+          <p className="text-sm text-mute">
+            {app!.rc_program ? `${app!.rc_program} · ` : ""}{app!.term ?? ""}
+          </p>
+          <p className="text-sm text-mute">Your checklist now tracks what Texas Tech has received. Uploads still needed show as open items.</p>
+          <Button onClick={() => window.location.assign("/portal/checklist")}>View my checklist</Button>
         </Card>
       )}
 
-      <Card className="space-y-4 p-5">
-        <Field label="Program">
-          <Dropdown value={f.program_id} disabled={locked || !meta} searchable placeholder="Select a program…"
-            options={(meta?.programs ?? []).map((p) => ({ value: p.id, label: `${p.name} (${p.degree})`, sub: p.college }))}
-            onChange={(v) => setF({ ...f, program_id: v })} />
-        </Field>
-        <Field label="Start term">
-          <Dropdown value={f.term_id} disabled={locked || !meta} placeholder="Select a term…"
-            options={(meta?.terms ?? []).map((t) => ({ value: t.id, label: t.name }))}
-            onChange={(v) => setF({ ...f, term_id: v })} />
-        </Field>
-        <Field label="Student type">
-          <Dropdown value={f.student_type} disabled={locked || !meta} placeholder="Select…"
-            options={(meta?.studentTypes.length ? meta.studentTypes : ["New First Time", "Transfer", "Graduate", "Returning"]).map((s) => ({ value: s, label: s }))}
-            onChange={(v) => setF({ ...f, student_type: v })} />
-        </Field>
-        <Field label="Anything we should know?" hint="Optional — goals, questions, transfer credits">
-          <textarea value={f.about} disabled={locked} onChange={(e) => setF({ ...f, about: e.target.value })}
-            rows={4} className="w-full rounded-md border border-line px-3.5 py-2.5 text-sm outline-none focus:border-ink disabled:bg-smoke" />
-        </Field>
-        {msg && <p className="text-sm text-mute">{msg}</p>}
-        {!locked && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => save(false)} disabled={busy}>Save draft</Button>
-            <Button onClick={() => save(true)} disabled={busy || !f.program_id || !f.term_id}>
-              {busy ? <Spinner /> : "Submit application"}
+      {waiting && !submitted && (
+        <Card className="space-y-3 p-5 border-2 border-ink">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">Finish on RaiderConnect</div>
+            <Pill>in progress</Pill>
+          </div>
+          <p className="text-sm text-mute">
+            {app!.rc_program ? `${app!.rc_program}` : "Your application"}{app!.term ? ` · ${app!.term}` : ""}
+          </p>
+          <ol className="list-decimal space-y-1 pl-5 text-sm text-mute">
+            <li>Sign in (or create your RaiderConnect account)</li>
+            <li>Choose <b className="text-ink">Undergraduate</b> → <b className="text-ink">Fully Online</b> → <b className="text-ink">{app!.modality ?? "8-week"}</b></li>
+            <li>Pick <b className="text-ink">{app!.rc_program ?? "your program"}</b> and complete the form</li>
+            <li>Come back here — we'll pick up your application automatically</li>
+          </ol>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => window.location.assign("https://texastech.my.site.com/online/TX_SiteLogin?startURL=%2Fonline%2FTargetX_App__NewApplication")}>
+              Open RaiderConnect
+            </Button>
+            <Button variant="outline" onClick={() => detect()} disabled={checking}>
+              {checking ? <Spinner /> : "I've submitted — check now"}
             </Button>
           </div>
-        )}
-      </Card>
+          {msg && <p className="text-sm text-mute">{msg}</p>}
+        </Card>
+      )}
+
+      {linked === false && !waiting && !submitted && (
+        <Card className="p-5 text-sm text-mute">
+          Applied before? We're still matching your record — an advisor will link your account, then your application will appear here automatically.
+        </Card>
+      )}
+
+      {!submitted && (
+        <Card className="space-y-4 p-5">
+          <Field label="Modality">
+            <div className="flex gap-2">
+              {["8-week", "16-week"].map((m) => (
+                <button key={m} type="button" onClick={() => setF({ ...f, modality: m, program: "" })}
+                  className={`flex-1 rounded-md border px-3 py-2 text-sm ${f.modality === m ? "border-ink bg-ink text-white" : "border-line"}`}>
+                  {m} courses
+                </button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Program" hint={f.modality === "16-week" ? "Education is the only 16-week online program" : undefined}>
+            <Dropdown value={f.program} searchable placeholder="Select a program…"
+              options={programs.map((p) => ({ value: p.label, label: p.label }))}
+              onChange={(v) => setF({ ...f, program: v })} />
+          </Field>
+          <Field label="Start term">
+            <Dropdown value={f.term_id} placeholder="Select a term…"
+              options={meta.terms.map((t) => ({ value: t.id, label: t.name }))}
+              onChange={(v) => setF({ ...f, term_id: v })} />
+          </Field>
+          <Button onClick={go} disabled={busy || !f.program}>
+            {busy ? <Spinner /> : "Continue to RaiderConnect"}
+          </Button>
+        </Card>
+      )}
     </div>
   );
 }

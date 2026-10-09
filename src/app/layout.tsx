@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Tracker } from "@/components/Tracker";
+import { BasePathPatch } from "@/components/BasePathPatch";
 
 export const metadata: Metadata = {
   title: "TTU Online Portal",
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-dvh">
         {children}
         <Tracker />
+        <BasePathPatch />
       </body>
     </html>
   );

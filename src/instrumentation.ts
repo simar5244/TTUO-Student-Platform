@@ -1,6 +1,10 @@
 // Runs once at server boot. Fails fast in production if required env is missing/weak.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+
+  // arm the Salesforce clone sync engine (scheduled + boot catch-up)
+  const { startSyncLoop } = await import("./lib/sync");
+  startSyncLoop();
   const prod = process.env.NODE_ENV === "production";
 
   const secret = process.env.SESSION_SECRET || "";

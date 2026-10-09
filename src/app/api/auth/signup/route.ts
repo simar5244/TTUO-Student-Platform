@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   );
   const userId = rows[0].id;
 
-  const match = await linkUserToContact(userId, email, phone);
+  const match = await linkUserToContact(userId, email, phone, name);
   await logActivity({ userId, kind: "action", detail: { action: "signup", match } , ip: ip ?? undefined, ua: ua ?? undefined });
 
   const { token } = await createSession(userId, ip ?? undefined, ua ?? undefined);

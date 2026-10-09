@@ -18,6 +18,7 @@ function sweep(now: number) {
 
 /** Sliding-window limiter. Returns null when allowed, or a ready 429 response. */
 export function rateLimit(key: string, max: number, windowMs: number): NextResponse | null {
+  if (!IS_PROD) return null; // dev: local testing would trip auth limits constantly
   const now = Date.now();
   sweep(now);
   let b = buckets.get(key);
@@ -48,7 +49,11 @@ export function csrfOk(req: NextRequest): boolean {
   const allowed = process.env.ALLOWED_ORIGIN; // explicit override if app sits behind a different host
   if (allowed && origin === allowed) return true;
   try {
-    return new URL(origin).host === req.headers.get("host");
+    // behind a tenant proxy the `host` header is the upstream's; the public
+    // host arrives in x-forwarded-host
+    const fwd = (req.headers.get("x-forwarded-host") ?? "").split(",")[0].trim();
+    const host = fwd || (req.headers.get("host") ?? "");
+    return new URL(origin).host === host;
   } catch {
     return false;
   }

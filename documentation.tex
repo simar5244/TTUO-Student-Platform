@@ -93,10 +93,13 @@ of people and one very large database:
   \item \textbf{Staff} --- advisors who review transcripts and documents,
         managers who combine duplicate records, and administrators who oversee
         the entire operation.
-  \item \textbf{The Salesforce mirror} --- a copy of our Salesforce data that
-        lives in our own PostgreSQL database (\texttt{lumen\_warehouse}) on our
-        server. The portal reads from it constantly, but --- very deliberately ---
-        never writes to it automatically.
+  \item \textbf{The Salesforce mirror and its clone} --- a copy of our
+        Salesforce data lives in our own PostgreSQL database
+        (\texttt{lumen\_warehouse}) as the \texttt{sf\_origin} schema. A sync
+        engine inside the portal re-copies just the TTU~Online slice into the
+        app's own \texttt{AH.sf\_*} clone tables every 5--30 minutes. The
+        portal reads only its clone, and --- very deliberately --- never writes
+        to the mirror automatically.
 \end{itemize}
 
 \begin{keybox}{In one sentence}
@@ -221,19 +224,34 @@ number, name, and a password. Three things happen in that single moment:
 
 \section{Step 2 --- The Identity Match}
 
-This is the heart of the system. Three outcomes are possible:
+This is the heart of the system. The email a student signs up with may or may
+not be the one they gave us as a lead --- so at signup the matcher scores the
+new account against the cloned contact slice on four independent signals:
+\textbf{email} (40 pts, checked against every email field on the SF record),
+\textbf{phone} (35, against every phone field), \textbf{last name} (15,
+including former last names --- people change surnames), and \textbf{first
+name} (10, including nicknames and preferred names). The total is a
+\textbf{confidence score} from 0 to 100. (The SF record's mailing address is
+shown to the reviewer as context but isn't scored --- the portal doesn't
+collect one yet.) Three outcomes are possible:
 
 \begin{center}
 \begin{tabularx}{\textwidth}{llX}
 \toprule
 \textbf{Match} & \textbf{Result} & \textbf{What the student sees} \\
 \midrule
-Email + phone both match & \textbf{Auto-linked} & Their existing university
-record appears on the dashboard immediately. \\
-Only one field matches & \textbf{Pending review} & ``We're verifying your
-record'' banner; a human confirms before linking. \\
-Nothing matches & \textbf{Unlinked} & Normal portal; staff can link manually
-later if they discover a duplicate. \\
+Email + phone + a name all match & \textbf{Auto-linked} (\texttt{auto\_full}) &
+Their existing university record appears on the dashboard immediately. \\
+Email + phone match, name doesn't & \textbf{Auto-linked + flagged}
+(\texttt{auto\_pair}) & Works immediately, but the link sits in a flagged lane
+of the match queue until a human eyeballs it --- a name that disagrees is how
+duplicates sneak through. \\
+Exactly one field hits & \textbf{Pending review} (\texttt{auto\_partial}) &
+``We're verifying your record''; a manager picks the right candidate from the
+scored list (every candidate, not just the top one). \\
+Nothing matches & \textbf{Unlinked} & Normal portal; the match queue offers a
+search that scans \emph{all} warehouse contacts, not just the online slice ---
+a student's lead may predate it. \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -248,43 +266,55 @@ then is the link made permanent --- and a work item appears in the outbox so a
 superadmin can reconcile the duplicate inside Salesforce itself.
 \end{plainbox}
 
-\section{Step 3 --- The Application}
+\section{Step 3 --- The Application (RaiderConnect)}
 
-The student picks three things: a program (drawn live from the real list of
-Texas Tech online degrees and certificates), a start term (Fall 2026, Early
-Fall, Late Fall, Spring, Summer\ldots), and a student type (first-time, transfer,
-graduate, returning). An optional free-text box collects anything else they
-want us to know.
+The actual application --- demographics, disciplinary questions, program and
+term selection --- is completed on \textbf{RaiderConnect}
+(\texttt{texastech.my.site.com/online}), Texas Tech's official applicant portal.
+That is deliberate: Salesforce owns the application record, and RaiderConnect
+is where it must be created.
 
-Two small but important details:
+RaiderConnect cannot be embedded in our page --- Salesforce responds with
+\texttt{X-Frame-Options: SAMEORIGIN} and a \texttt{frame-ancestors} CSP that
+forbids framing --- so the portal hands the student over in the same tab and
+keeps the seam invisible:
 
-\begin{itemize}[leftmargin=1.4em]
-  \item The pickers are \emph{custom-built menus}, not browser-default dropdowns,
-        so they look identical and behave the same on every phone and browser ---
-        including a type-to-search filter for the two-hundred-plus programs.
-  \item The application can be saved as a \textbf{draft} and finished later;
-        \emph{Submit} locks it and starts the clock.
-\end{itemize}
+\begin{enumerate}[leftmargin=1.6em]
+  \item The student picks \textbf{modality} (8-week or 16-week courses ---
+        16-week is Education only) and \textbf{program} from the 37-entry
+        catalog mirrored from RaiderConnect's own picker, plus a start term.
+        This saves an \emph{intent} row (\texttt{rc\_started}) and a timeline
+        event.
+  \item \emph{Continue to RaiderConnect} takes them to the official form in the
+        same tab, with on-page guidance that mirrors the picks they just made
+        (``choose Undergraduate $\rightarrow$ Fully Online $\rightarrow$
+        8-week $\rightarrow$ \emph{their program}'').
+  \item When they come back --- detected automatically on tab focus, a 30-second
+        poll, or the \emph{I've submitted --- check now} button --- the portal
+        looks for a new TTU~Online application on their linked contact, live in
+        the warehouse first (fresher than the clone). When it lands, the intent
+        row attaches the Salesforce application id and flips to
+        \texttt{submitted}.
+\end{enumerate}
 
 \section{Step 4 --- The Checklist}
 
-Submitting the application creates a personal checklist from a template. Today
-the default template contains six items (application form, government ID,
-transcripts, resume, statement of purpose, application fee); the real
-per-program requirement lists can replace this seed template without any code
-change --- they live in a template table staff can edit.
+Once the Salesforce application exists, the checklist \emph{is Salesforce's}:
+every \texttt{TargetX\_SRMb\_\_Checklist\_Item\_\_c} row for that application is
+piped into the warehouse (\texttt{AH.checklist\_items}, via the Lumen ``SF
+Checklist Items'' connector, incremental) and cloned into
+\texttt{AH.sf\_checklist\_item} each sync --- name, requirement code, status,
+received/closed/waived flags. What a student uploaded on RaiderConnect shows up
+received on the next sync, automatically.
 
-Each item moves through a life cycle:
+The local \texttt{portal\_checklist\_items} template checklist remains only as a
+fallback while no SF application exists yet --- and for \textbf{General
+Business} applicants the portal shows ``requirements coming soon,'' because
+that program's requirements are still being finalized on the TTU side.
 
-\begin{center}
-\texttt{not started} $\rightarrow$ \texttt{in progress} $\rightarrow$
-\texttt{submitted} $\rightarrow$ \texttt{approved} / \texttt{rejected} /
-\texttt{waived}
-\end{center}
-
-Students see a live percentage on their dashboard. Advisors see every submitted
-item in a review queue and mark each one approved, rejected (with a note the
-student can see), or waived.
+A student can also upload straight to the portal for an open requirement; that
+upload counts as \emph{submitted with us} until Salesforce parity confirms it
+(next section).
 
 \section{Step 5 --- Documents}
 
@@ -302,6 +332,25 @@ optionally attached to a specific checklist item. Every upload is:
         authorized person opens it.
   \item \textbf{Access-checked} --- a student can open only their own files;
         staff roles can open anyone's.
+\end{itemize}
+
+\emph{Document status is a parity loop, not a single flag:}
+
+\begin{center}
+\texttt{pending\_review} $\rightarrow$ \texttt{pushed} $\rightarrow$
+\texttt{approved} \qquad (\texttt{rejected} is the sideways exit)
+\end{center}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{pending\_review} --- lands here the moment it's uploaded; appears
+        in the staff document queue (\texttt{/admin/documents}).
+  \item \textbf{pushed} --- an advisor downloaded the file and attached it to
+        the student's checklist inside RaiderConnect/Salesforce by hand, then
+        marked it pushed (optionally picking which checklist item it satisfies).
+        An outbox ticket records who did it.
+  \item \textbf{approved} --- set \emph{only} by the sync engine: once the SF
+        checklist item shows received/closed/waived, parity is real and the
+        portal calls it approved. Nobody marks this by hand.
 \end{itemize}
 
 \section{Step 6 --- Messaging}
@@ -331,9 +380,9 @@ recent events across the whole system.
 \section{Leads}
 
 The leads list is a searchable, filterable window onto every RFI contact in the
-Salesforce mirror --- the same records the recruiting team creates. Staff search
-by name, email, or phone, and filter by lifecycle stage (Prospect, Inquiry,
-Applicant\ldots) and term.
+cloned slice --- the same records the recruiting team creates in Salesforce,
+at most one sync interval old. Staff search by name, email, or phone, and
+filter by lifecycle stage (Prospect, Inquiry, Applicant\ldots) and term.
 
 \section{Applications}
 
@@ -350,6 +399,8 @@ One page per human. It combines:
   \item every application on file and its stage,
   \item every recorded interaction (RFI events, touchpoints),
   \item the linked portal account, if one exists,
+  \item the portal application's \textbf{status timeline} --- every transition
+        with actor and timestamp, from draft through decision,
   \item uploaded documents and checklist state,
   \item staff notes,
   \item and that person's own activity on the website --- which pages they
@@ -373,6 +424,14 @@ The manager-facing screen has three lanes:
         staff can spot-check that automation behaved.
 \end{enumerate}
 
+Every suggested pair carries a \textbf{confidence score} (0--100) and
+per-field evidence chips --- email, phone, last name (\emph{including former
+last names, which catches post-marriage surname changes}), and first name ---
+while the contact's city/state sits alongside as extra context, so the
+reviewer sees \emph{why} the system suspects a match, not just that it does.
+A free-text search over the clone covers the case where the algorithm missed
+entirely.
+
 \begin{warnbox}
 Confirming a link or requesting a merge does \textbf{not} modify Salesforce.
 It writes a work item into the outbox. A superadmin applies each change by
@@ -388,10 +447,13 @@ waive --- every click is recorded with the advisor's name.
 \section{Status Changes and the Outbox}
 
 When a manager changes an application's status --- say, from \emph{submitted} to
-\emph{under review} or \emph{admitted} --- two writes happen:
+\emph{under review} or \emph{admitted} --- three writes happen:
 
 \begin{enumerate}[leftmargin=1.6em]
   \item the portal's own copy is updated so the student sees progress instantly;
+  \item a row is appended to \texttt{portal\_application\_events} --- the
+        append-only timeline recording \emph{from-status, to-status, actor,
+        timestamp}, so an application's full progression is never lost;
   \item a row is appended to the \textbf{outbox} describing exactly what must be
         mirrored into Salesforce.
 \end{enumerate}
@@ -437,7 +499,7 @@ A daily event chart, the most-visited pages, and per-user time-on-site --- the
 
 \chapter{Where the Data Lives}
 
-\section{Two Schemas, Two Responsibilities}
+\section{Three Zones, Three Responsibilities}
 
 Everything sits in one PostgreSQL database called \texttt{lumen\_warehouse},
 divided into clearly separated areas (``schemas''):
@@ -445,23 +507,31 @@ divided into clearly separated areas (``schemas''):
 \begin{center}
 \begin{tabularx}{\textwidth}{lX}
 \toprule
-\textbf{Schema} & \textbf{Contents} \\
+\textbf{Zone} & \textbf{Contents} \\
 \midrule
 \texttt{sf\_origin} & The Salesforce mirror: contacts (3.5M), applications
-(470K), interactions (4.3M), accounts, terms, programs, record types. The portal
-\textbf{reads} this schema and \textbf{never writes} to it. \\
-\texttt{AH} & The project's own tables: portal users, sessions, identity links,
-portal applications, checklists, documents, chat, notes, audit log, outbox. This
-is the only place the portal writes. \\
+(470K), interactions (4.3M), accounts, terms, programs, record types. Fed by
+the warehouse's own ETL. The portal \textbf{reads} it during syncs and
+\textbf{never writes} to it. \\
+\texttt{AH.sf\_*} & The project's \textbf{clone} of the TTU~Online slice ---
+contact, application, term, program, record type --- refreshed every 5--30
+minutes, plus append-only \texttt{*\_hist} tables keeping every observed
+version of every row. All portal reads hit this copy. \\
+\texttt{AH.portal\_*} & The app's own data: users, sessions, identity links,
+applications, checklists, documents, chat, notes, audit log, outbox,
+projections. The only zone the portal writes interactively. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-This separation is the project's most important architectural rule. It means the
-portal can never corrupt the institutional data --- its writes are physically
-confined to its own schema, and in production the database account will be
-granted \emph{read-only} permission on \texttt{sf\_origin} as a second,
-belt-and-suspenders layer.
+This separation is the project's most important architectural rule. The portal
+can never corrupt institutional data --- its writes are physically confined to
+its own tables, and in production the database account is granted
+\emph{read-only} permission on \texttt{sf\_origin} as a second,
+belt-and-suspenders layer. Keeping our own clone (rather than querying the
+mirror live) means the admissions site keeps working even if the warehouse ETL
+is down, lets us attach portal-specific columns to records, and gives us a
+searchable append-only history of how each record evolved.
 
 \section{The Key Tables, in Plain Language}
 
@@ -492,26 +562,74 @@ Salesforce by hand. \\
 \texttt{portal\_activity} & The audit trail: every click, page, login, and admin
 action. \\
 \texttt{portal\_notes} & Staff notes attached to people. \\
+\texttt{portal\_application\_events} & Append-only status timeline per
+application --- every transition with actor and timestamp (stateful, not just
+the latest status). \\
+\texttt{portal\_contact\_projection} & The ``generated columns'': for each
+linked SF contact, the portal user id, latest portal application + status,
+the full status-history JSON, checklist progress, and last portal activity.
+Rebuilt each sync and on every link/status change. \\
+\texttt{sf\_contact / sf\_application} & The cloned slice: current state of
+the records the portal cares about (denormalized, resolved names). \\
+\texttt{sf\_contact\_hist / sf\_application\_hist} & Append-only history: every
+version of every cloned row, keyed by content hash --- how an SF record
+progressed through statuses over time. \\
+\texttt{sf\_term / sf\_program / sf\_recordtype} & Cloned reference data for
+the pickers and filters. \\
+\texttt{sf\_sync\_runs} & Every sync logged: trigger (schedule/manual/boot),
+row counts, duration, errors --- the audit trail for the pipeline itself. \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\section{How Sync Works --- Slowly, On Purpose}
+\section{How Sync Works --- Clone Down, Queue Up}
 
 The user asked for one rule above all: \emph{do not let the app mutate the
-warehouse on its own}. The system honors it in three ways:
+warehouse on its own}. Sync therefore runs in two opposite, asymmetric
+directions:
 
+\textbf{Down (Salesforce $\rightarrow$ portal): automatic, on a timer.}
 \begin{enumerate}[leftmargin=1.6em]
-  \item \textbf{Reads are free.} Leads, programs, terms, applications --- the
-        portal queries the mirror directly, so students and staff always see
-        current data.
+  \item A sync engine inside the app wakes every \textbf{5--30 minutes}
+        (\texttt{SYNC\_INTERVAL\_MINUTES}, default 15) and once at boot if the
+        clone is empty or stale.
+  \item Each run takes a Postgres advisory lock first, so a scheduled run and a
+        manual \emph{Refresh now} can never overlap.
+  \item It re-reads just the TTU~Online slice of the 3.6-million-row mirror ---
+        contacts flagged Distance Learning, \texttt{TTU\_Online\_Student},
+        online lead sources, TUO campus, or owning a TTU~Online application
+        ($\approx$76{,}500 contacts) --- plus their applications ($\approx$33K),
+        per-item checklist rows ($\approx$55K, TTU~Online applications only),
+        and the small reference tables --- and \textbf{upserts by Salesforce Id}
+        into the \texttt{AH.sf\_*} clone.
+  \item Every row carries a content hash; when a row differs from last time it
+        is \emph{also} appended to \texttt{sf\_*\_hist} --- so the clone is
+        current-state \textbf{and} the history is append-only (no state is
+        ever lost, on either side).
+  \item After the copy, two reconciliation steps run: \emph{detect} attaches a
+        newly-found Salesforce application to the student's intent row (and
+        writes a \texttt{submitted} timeline event), and \emph{parity} flips
+        pushed documents to \texttt{approved} once their SF checklist item
+        shows received. Then \texttt{portal\_contact\_projection} is rebuilt:
+        the generated columns stitching each linked contact to its portal user,
+        application status + timeline, SF-side status/stage/decision, checklist
+        counts, open items, and pending uploads.
+  \item Every run lands in \texttt{sf\_sync\_runs}. Managers and admins see
+        run history and a \textbf{Refresh now} button at \texttt{/admin/sync}.
+\end{enumerate}
+
+\textbf{Up (portal $\rightarrow$ Salesforce): manual, always.}
+\begin{enumerate}[leftmargin=1.6em]
   \item \textbf{Writes stay local.} Anything that changes state lands in
-        \texttt{AH} tables instantly (the portal is always truthful about the
-        portal).
+        \texttt{AH.portal\_*} tables instantly (the portal is always truthful
+        about the portal) --- including a \texttt{portal\_application\_events}
+        row for every status transition.
   \item \textbf{Salesforce changes queue as tickets.} Status flips, merges, and
         link confirmations each write an outbox row: \emph{entity, action,
         payload, requester, timestamp}. The superadmin works the queue one item
-        at a time and marks each done.
+        at a time and marks each done; the next scheduled sync then reflects
+        the change back into the clone --- closing the loop without the
+        website ever touching Salesforce.
 \end{enumerate}
 
 \begin{keybox}{Why a queue instead of a direct sync}
@@ -735,16 +853,19 @@ human would review.
 \section{What Staff Do Each Morning}
 
 \begin{enumerate}[leftmargin=1.6em]
-  \item \textbf{Advisors} open the review queue, work through submitted
-        checklist items and documents (approve / reject-with-note / waive), and
-        watch the chat console for new conversations.
+  \item \textbf{Advisors} open the document queue (\texttt{/admin/documents}),
+        download each \texttt{pending\_review} file, attach it to the right
+        checklist item inside RaiderConnect, and mark it \texttt{pushed}
+        (optionally naming which SF item it satisfies) --- and watch the chat
+        console for new conversations.
   \item \textbf{Managers} check the match queue: confirm or reject pending
         identity links, manually link the stragglers, and move applications
         through their statuses --- knowing every flip also writes an outbox
-        ticket.
+        ticket and lands on the student's status timeline.
   \item \textbf{Administrators} review the audit trail for anomalies, manage
-        staff accounts, and work the outbox: applying each queued change in
-        Salesforce by hand and marking it done.
+        staff accounts, glance at \texttt{/admin/sync} to confirm the clone is
+        fresh (or force a refresh), and work the outbox: applying each queued
+        change in Salesforce by hand and marking it done.
 \end{enumerate}
 
 \section{The Normal Data Flow}
@@ -753,17 +874,27 @@ human would review.
 \textbf{End-to-end example --- RFI to admit:}
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
   \item Recruiter collects an RFI at an event $\rightarrow$ Salesforce lead
-        appears in the mirror (read-only to the portal).
-  \item Student signs up on their phone $\rightarrow$ identity match links them
-        (or queues for review).
-  \item Student picks program + term $\rightarrow$ application created in
-        \texttt{AH}, checklist materializes.
-  \item Student uploads transcript $\rightarrow$ file encrypted, checklist item
-        flips to \emph{submitted}, advisor sees it in the queue.
-  \item Advisor approves item; manager flips status $\rightarrow$ portal updates,
-        outbox ticket queued.
-  \item Superadmin opens the outbox, applies the status in Salesforce, marks the
-        ticket done. Both systems agree --- and a human certified every step.
+        appears in \texttt{sf\_origin} via the warehouse ETL.
+  \item Next sync (or a manager's \emph{Refresh now}) clones the lead into
+        \texttt{AH.sf\_contact}; any change since last run is appended to
+        \texttt{sf\_contact\_hist}.
+  \item Student signs up on their phone $\rightarrow$ the matcher scores them
+        against the clone (email/phone/last/first name) $\rightarrow$ auto-link,
+        or queued for review with a confidence score.
+  \item Student picks program + term and continues to RaiderConnect
+        $\rightarrow$ intent row saved (\texttt{rc\_started}); the official
+        application is created there, in Salesforce.
+  \item The next sync (or the return check) finds the new TTU~Online
+        application on their contact $\rightarrow$ the intent row attaches it,
+        flips to \texttt{submitted}, timeline event recorded.
+  \item Student uploads a transcript in our portal $\rightarrow$ file encrypted,
+        status \texttt{pending\_review}, advisor sees it in the document queue.
+  \item Advisor attaches it to the checklist item inside RaiderConnect and marks
+        the portal copy \texttt{pushed} $\rightarrow$ outbox ticket queued.
+  \item Next sync sees the SF checklist item received $\rightarrow$ the portal
+        document flips to \texttt{approved} by itself. The record shows
+        identical state on both sides, and a human certified every write to
+        Salesforce.
 \end{enumerate}
 \end{plainbox}
 
@@ -777,27 +908,48 @@ traffic. The one component that \emph{will} want upgrading first at scale is the
 chat's 2.5-second polling, which can become server-sent events or websockets
 later without changing the user experience.
 
-\chapter{Deployment Plan for \texttt{tosmonline0001.ttu.edu}}
+\chapter{Production --- \texttt{tosmonline0001.ttu.edu}}
 
-\section{The Shape of Production}
+\section{The Shape of Production (as deployed)}
 
 \begin{itemize}[leftmargin=1.4em]
-  \item \textbf{One server} running the Node.js application, PostgreSQL, and a
-        reverse proxy (nginx or Apache) in front --- no containers, per project
-        requirements.
-  \item \textbf{HTTPS} terminated at the proxy with a real certificate (TTU
-        issued or Let's Encrypt), redirecting all plain HTTP to TLS.
-  \item \textbf{Database privileges}: the application connects as a dedicated
-        role that can read \texttt{sf\_origin} and read/write only the
-        \texttt{AH} portal tables --- write access to the mirror simply does not
-        exist at the permission level.
-  \item \textbf{Fresh secrets}: new \texttt{SESSION\_SECRET},
-        \texttt{PASSWORD\_PEPPER}, and \texttt{DOC\_ENC\_KEY} generated on the
-        server, plus real \texttt{TWILIO\_*} credentials.
-  \item \textbf{Uploads} on an encrypted volume outside the web root.
-  \item \textbf{Firewall}: only 443/80 and SSH open; Postgres bound to
-        localhost.
+  \item \textbf{Two boxes, one public face.} The portal app runs on
+        \texttt{tosmonline0001} --- the public-facing host, where nginx already
+        terminates :443 with the real TTU certificate. The databases stay on
+        \texttt{tosmonline0003}: \texttt{lumen\_warehouse} (SF mirror +
+        \texttt{AH.checklist\_items} via the \emph{SF Checklist Items} Lumen
+        connector) and \texttt{AHPortalDB} (every \texttt{portal\_*} table plus
+        the \texttt{sf\_*} clone, schema \texttt{"AH"}).
+  \item \textbf{Cross-box database access} rides a persistent SSH tunnel ---
+        Postgres on 0003 binds localhost only, so PM2 process
+        \texttt{ahportal-db-tunnel} keeps
+        \texttt{127.0.0.1:55432 $\rightarrow$ 0003:5432} open (key auth between
+        the boxes already existed). The app's \texttt{DATABASE\_URL} and
+        \texttt{WAREHOUSE\_URL} both point at \texttt{127.0.0.1:55432}.
+  \item \textbf{Two PM2 processes} on 0001 (\texttt{pm2 save}d): the tunnel and
+        \texttt{april-web} (\texttt{next start -p 3210},
+        \texttt{NEXT\_BASE\_PATH=/sim/AHPortal}).
+  \item \textbf{Public URL} \texttt{https://tosmonline0001.ttu.edu/sim/AHPortal/}:
+        an nginx \texttt{location} block in \texttt{chatbot.conf} proxies to
+        \texttt{127.0.0.1:3210} and forwards \texttt{X-Forwarded-Host} /
+        \texttt{-Proto} / \texttt{-For}, which the app's CSRF check and logs
+        consume.
+  \item \textbf{Least privilege:} the portal's \texttt{ahportal} role owns
+        \texttt{AHPortalDB.AH} and holds \emph{SELECT-only} grants on
+        \texttt{lumen\_warehouse.sf\_origin} and \texttt{AH}. Writes to the
+        mirror fail at the permission level.
+  \item \textbf{Fresh server-side secrets} live in \texttt{.env.local} on 0001;
+        uploads sit in \texttt{\textasciitilde/ahportal/uploads}, outside any
+        web path.
 \end{itemize}
+
+\begin{warnbox}
+The box's glibc (2.28) predates what Next.js's native SWC binary needs ---
+production builds must run \texttt{next build --webpack} (the npm
+\texttt{build} script does this). Public assets must be referenced through
+\texttt{asset()} (adds the \texttt{/sim/AHPortal} prefix); bare root-relative
+\texttt{/logo.png}-style paths 404 behind the tenant mount.
+\end{warnbox}
 
 \begin{warnbox}
 \textbf{Before launch:} the dev values currently in \texttt{.env.local}
@@ -805,24 +957,55 @@ later without changing the user experience.
 dev MFA code \texttt{424242} disappears automatically once Twilio keys are set.
 \end{warnbox}
 
-\section{Go-Live Checklist}
+\section{Go-Live Checklist (what was actually done)}
 
 \begin{enumerate}[leftmargin=1.6em]
-  \item Generate all secrets fresh on the server.
-  \item Point \texttt{DATABASE\_URL}/\texttt{WAREHOUSE\_URL} at the production
-        Postgres with SSL required.
-  \item Create the least-privilege DB role and grant: \texttt{SELECT} on
-        \texttt{sf\_origin}, full rights on \texttt{AH.portal\_*}.
-  \item Run the schema migration (creates all \texttt{AH} tables).
-  \item Configure the reverse proxy: TLS, \texttt{X-Forwarded-For} pass-through,
-        HTTP$\rightarrow$HTTPS redirect.
-  \item Create the first superadmin account; create staff via the admin UI.
-  \item Smoke-test: headers present, secure cookie set, forged-origin request
-        refused, 6th bad login throttled, a file upload round-trips encrypted.
-  \item Load the real requirement lists into
-        \texttt{portal\_checklist\_templates} (replaces the seed defaults).
-  \item Point \texttt{BOT\_ENDPOINT} at the custom knowledge-base bot.
+  \item \textbf{Provision:} created \texttt{AHPortalDB} + least-privilege
+        \texttt{ahportal} role --- owns the portal schema, \texttt{SELECT}-only
+        on \texttt{lumen\_warehouse.sf\_origin} and \texttt{AH}.
+  \item \textbf{Secrets:} generated server-side into
+        \texttt{\textasciitilde/ahportal/app/.env.local}; staff accounts
+        (\texttt{admin@}/\texttt{advisor@}/\texttt{manager@ttu.edu}) created
+        with generated passwords.
+  \item \textbf{Checklist pipe:} added the Lumen connector \emph{SF Checklist
+        Items $\rightarrow$ AH} (id \texttt{3e0ca7b6}, incremental on
+        \texttt{SystemModstamp}) so \texttt{TargetX\_SRMb\_\_Checklist\_Item\_\_c}
+        lands in \texttt{AH.checklist\_items} --- 1.46M rows, all-applications.
+  \item \textbf{Build \& run:} \texttt{npm ci \&\& npm run build}
+        (webpack), PM2 \texttt{april-web} on :3210 plus the
+        \texttt{ahportal-db-tunnel} SSH forward to 0003; \texttt{pm2 save}.
+  \item \textbf{Mount:} nginx \texttt{location /sim/AHPortal/} in
+        \texttt{chatbot.conf} $\rightarrow$ \texttt{127.0.0.1:3210} with
+        forwarded-host headers (0001 already owns the public :443 cert).
+  \item \textbf{Verified live:} portal 200 on the real cert, HTTPS login
+        $\rightarrow$ session $\rightarrow$ admin stats over clone data, signup
+        POST passes CSRF through the proxy, assets load under the prefix, boot
+        sync confirmed idempotent through the tunnel (0 changes on re-run).
+  \item \textbf{Before real students:} set \texttt{TWILIO\_*} for live SMS MFA
+        (dev code \texttt{424242} disappears automatically once set) and point
+        \texttt{BOT\_ENDPOINT} at the knowledge-base bot.
 \end{enumerate}
+
+\section{Staff Accounts \& Where They Live}
+
+Sign in at \texttt{https://tosmonline0001.ttu.edu/sim/AHPortal/login}.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lXl}
+\toprule
+\textbf{Account} & \textbf{Password} & \textbf{Role} \\
+\midrule
+\texttt{admin@ttu.edu} & \texttt{zOKsKDcKBRYBe3} & superadmin \\
+\texttt{advisor@ttu.edu} & \texttt{CTFR3z1MViZGwL} & advisor \\
+\texttt{manager@ttu.edu} & \texttt{MwugOcgLjuV0F} & manager \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+While \texttt{TWILIO\_*} is unset, MFA challenges accept the dev code
+\texttt{424242}. The same credentials live server-side at
+\texttt{\textasciitilde/ahportal/STAFF\_LOGINS.txt} on tosmonline0001 ---
+change them at first login and rotate the file copy if the document is shared.
 
 \section{What Happens If Something Breaks}
 
@@ -851,8 +1034,9 @@ via systemd. \\
 \section{Still To Receive / Decide}
 
 \begin{itemize}[leftmargin=1.4em]
-  \item \textbf{The real requirement lists} per program/term --- the checklist
-        tables are ready; only the content is missing.
+  \item \textbf{General Business requirements} --- the one program whose SF
+        checklist isn't finalized; its applicants see ``requirements coming
+        soon'' until TTU publishes them.
   \item \textbf{Twilio production keys} for live SMS MFA.
   \item \textbf{The custom chatbot endpoint} (\texttt{BOT\_ENDPOINT}) ---
         wire-in point is ready: the portal posts the message and user context,
@@ -887,9 +1071,25 @@ via systemd. \\
 \begin{description}[leftmargin=1.4em,style=nextline]
   \item[RFI] Request For Information --- the first contact a prospect makes
   (event signup, call, web form), which becomes a Salesforce lead.
+  \item[RaiderConnect] TTU's official applicant portal
+  (\texttt{texastech.my.site.com/online}) --- where the application itself is
+  completed and where advisors push student documents into Salesforce.
+  \item[Parity] The moment the warehouse shows Salesforce reflecting something
+  the portal recorded (e.g.\ a pushed document whose checklist item is now
+  received) --- only then does the portal treat it as final.
   \item[Lead] A prospective student in Salesforce who has not yet applied.
   \item[Salesforce mirror] A copy of our Salesforce data synchronized into our
-  own database for fast querying.
+  own database (\texttt{sf\_origin}) by the warehouse ETL --- read-only to us.
+  \item[Clone (\texttt{AH.sf\_*})] The portal's own copy of just the
+  TTU~Online slice of the mirror, refreshed every 5--30 minutes, with
+  append-only history tables keeping every version of every row.
+  \item[Sync engine] The in-app job that refreshes the clone on a timer or on
+  demand from \texttt{/admin/sync}; advisory-locked so runs never overlap.
+  \item[Confidence score] The 0--100 match strength from comparing email,
+  phone, last name (including former names), and first name (including
+  nicknames).
+  \item[Projection] The generated columns stitched onto a linked SF contact:
+  portal user, application status, status timeline, checklist progress.
   \item[Schema] A named compartment inside a database that keeps tables
   organized --- \texttt{sf\_origin} holds Salesforce data, \texttt{AH} holds
   ours.

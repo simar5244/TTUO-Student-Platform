@@ -36,7 +36,8 @@ for 200–5k users. Tuned per endpoint:
 | `/api/track`            | 120 / min        |
 | all other `/api/*`      | 240 / min        |
 
-429 responses include `Retry-After`.
+429 responses include `Retry-After`. Rate limiting is disabled when
+`NODE_ENV !== "production"` (local dev) — test it with `npm run build && npm start`.
 
 ## CSRF & CORS
 

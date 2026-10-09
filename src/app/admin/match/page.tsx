@@ -1,8 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { PageHeader, Card, Pill, Button, Input, Empty, statusTone, Spinner } from "@/components/ui";
+import { PageHeader, Card, Pill, Button, Input, Empty, statusTone, Spinner, cn } from "@/components/ui";
 import { IconCheck, IconX, IconLink, IconSearch } from "@/components/icons";
+
+const FIELD_LABELS: [string, string][] = [["Email", "email"], ["Phone", "phone"], ["Last name", "last_name"], ["First name", "first_name"]];
+
+function FieldChips({ f }: { f: Record<string, boolean> | null | undefined }) {
+  if (!f) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {FIELD_LABELS.map(([label, k]) => (
+        <span key={k} className={cn("rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+          f[k] ? "bg-ink text-white" : "bg-smoke text-mute")}>{label}</span>
+      ))}
+    </div>
+  );
+}
+
+function Confidence({ n }: { n?: number | null }) {
+  if (n == null) return null;
+  const tone = n >= 75 ? "ok" : n >= 35 ? "warn" : "mute";
+  return <Pill tone={tone}>{n}% match</Pill>;
+}
 
 export default function MatchPage() {
   const [d, setD] = useState<any>(null);
@@ -22,9 +42,11 @@ export default function MatchPage() {
   async function searchContacts(userId: string) {
     const term = contactSearch[userId];
     if (!term) return;
-    const r = await fetch(`/api/admin/leads?search=${encodeURIComponent(term)}`);
+    // browse hits the ENTIRE warehouse contact table, not just the online slice —
+    // the student's lead may predate it
+    const r = await fetch(`/api/admin/match?browse=${encodeURIComponent(term)}`);
     const d = await r.json();
-    setSuggestions((s) => ({ ...s, [userId]: d.rows ?? [] }));
+    setSuggestions((s) => ({ ...s, [userId]: d.browse ?? [] }));
   }
 
   if (!d) return <div className="py-20 text-center"><Spinner /></div>;
@@ -47,6 +69,10 @@ export default function MatchPage() {
         <div className="space-y-3">
           {d.pending.map((p: any) => (
             <Card key={p.id} className="p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <FieldChips f={p.live_fields ?? p.match_fields} />
+                <Confidence n={p.live_confidence ?? p.confidence} />
+              </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-mute">Portal signup</div>
@@ -60,6 +86,8 @@ export default function MatchPage() {
                     <Row label="Name" value={p.contact.Name} />
                     <Row label="Email" value={p.contact.Email} match={p.match_fields?.email} />
                     <Row label="Phone" value={p.contact.MobilePhone || p.contact.Phone} match={p.match_fields?.phone} />
+                    {p.contact.former_last && <Row label="Former last name" value={p.contact.former_last} match={p.match_fields?.last_name} />}
+                    <Row label="City / State" value={[p.contact.city, p.contact.state].filter(Boolean).join(", ")} />
                     <Row label="Status" value={`${p.contact.status || "—"} · ${p.contact.term || ""}`} />
                   </>) : <p className="text-sm text-mute">No candidate found.</p>}
                 </div>
@@ -70,6 +98,48 @@ export default function MatchPage() {
                 </Button>
                 <Button variant="outline" className="px-3 py-1.5 text-xs" disabled={busy === p.id} onClick={() => act({ action: "reject", linkId: p.id }, p.id)}>
                   <IconX width={13} height={13} /> Not the same person
+                </Button>
+                {p.contact && <a href={`/admin/people/${p.contact.Id}`} className="px-3 py-1.5 text-xs font-medium text-mute underline underline-offset-4">View record</a>}
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* flagged auto-links — email+phone matched but name didn't */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold">Flagged auto-links <span className="text-mute">({d.flagged?.length ?? 0}) — matched on email+phone only</span></h2>
+        {!d.flagged?.length && <Empty title="Nothing flagged" hint="Auto-links where the name didn't match show up here." />}
+        <div className="space-y-3">
+          {(d.flagged ?? []).map((p: any) => (
+            <Card key={p.id} className="p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <FieldChips f={p.live_fields ?? p.match_fields} />
+                <Pill tone="warn">needs eyeball</Pill>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-mute">Portal signup</div>
+                  <Row label="Name" value={p.display_name} />
+                  <Row label="Email" value={p.email} />
+                  <Row label="Phone" value={p.phone} />
+                </div>
+                <div>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-mute">SF record</div>
+                  {p.contact ? (<>
+                    <Row label="Name" value={p.contact.Name} />
+                    <Row label="Email" value={p.contact.Email} />
+                    <Row label="Phone" value={p.contact.MobilePhone || p.contact.Phone} />
+                    <Row label="Status" value={`${p.contact.status || "—"} · ${p.contact.term || ""}`} />
+                  </>) : <p className="text-sm text-mute">No contact row.</p>}
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button className="px-3 py-1.5 text-xs" disabled={busy === p.id} onClick={() => act({ action: "unflag", linkId: p.id }, p.id)}>
+                  <IconCheck width={13} height={13} /> Looks right
+                </Button>
+                <Button variant="outline" className="px-3 py-1.5 text-xs" disabled={busy === p.id} onClick={() => act({ action: "reject", linkId: p.id }, p.id)}>
+                  <IconX width={13} height={13} /> Wrong person
                 </Button>
                 {p.contact && <a href={`/admin/people/${p.contact.Id}`} className="px-3 py-1.5 text-xs font-medium text-mute underline underline-offset-4">View record</a>}
               </div>
@@ -101,12 +171,18 @@ export default function MatchPage() {
                 <div className="mt-3 border-t border-line pt-3">
                   <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-mute">Suggested</div>
                   {u.candidates.map((cand: any) => (
-                    <div key={cand.Id} className="flex items-center justify-between py-1.5 text-sm">
-                      <span>{cand.Name} <span className="text-xs text-mute">· {cand.Email} · {cand.status}</span></span>
-                      <Button variant="ghost" className="px-2 py-1 text-xs" disabled={busy === cand.Id}
-                        onClick={() => act({ action: "link", userId: u.user_id, contactId: cand.Id }, cand.Id)}>
-                        <IconLink width={13} height={13} /> Link
-                      </Button>
+                    <div key={cand.Id} className="py-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span>{cand.Name} <span className="text-xs text-mute">· {cand.Email} · {cand.status} · {[cand.city, cand.state].filter(Boolean).join(", ")}</span></span>
+                        <span className="flex items-center gap-2">
+                          <Confidence n={cand.confidence} />
+                          <Button variant="ghost" className="px-2 py-1 text-xs" disabled={busy === cand.Id}
+                            onClick={() => act({ action: "link", userId: u.user_id, contactId: cand.Id }, cand.Id)}>
+                            <IconLink width={13} height={13} /> Link
+                          </Button>
+                        </span>
+                      </div>
+                      <div className="mt-1"><FieldChips f={cand.fields} /></div>
                     </div>
                   ))}
                 </div>
@@ -138,6 +214,7 @@ export default function MatchPage() {
                 <span>{a.contact?.Name} <span className="text-xs text-mute">({a.contact?.Email})</span></span>
               </div>
               <div className="flex items-center gap-2">
+                <Confidence n={a.confidence} />
                 <Pill tone={statusTone(a.status)}>{a.status}</Pill>
                 <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => act({ action: "confirm", linkId: a.id }, a.id)}>Verify</Button>
                 <Button variant="ghost" className="px-2 py-1 text-xs text-accent" onClick={() => act({ action: "reject", linkId: a.id }, a.id)}>Wrong</Button>

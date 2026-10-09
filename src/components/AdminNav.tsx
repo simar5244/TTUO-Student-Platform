@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "./ui";
-import { IconGrid, IconUsers, IconDoc, IconMerge, IconList, IconChat, IconShield, IconClock, IconChart, IconLogout, IconMenu, IconX, IconSend } from "./icons";
+import { IconGrid, IconUsers, IconDoc, IconMerge, IconList, IconChat, IconShield, IconClock, IconChart, IconLogout, IconMenu, IconX, IconSend, IconSync } from "./icons";
 import { Logo } from "./Logo";
 import type { Role } from "@/lib/auth";
 
@@ -13,9 +13,11 @@ const NAV: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: "/admin/leads", label: "Leads", icon: IconUsers, roles: ["advisor", "manager", "admin"] },
   { href: "/admin/applications", label: "Applications", icon: IconDoc, roles: ["advisor", "manager", "admin"] },
   { href: "/admin/review", label: "Review queue", icon: IconList, roles: ["advisor", "manager", "admin"] },
+  { href: "/admin/documents", label: "Documents", icon: IconDoc, roles: ["advisor", "manager", "admin"] },
   { href: "/admin/match", label: "Match & merge", icon: IconMerge, roles: ["manager", "admin"] },
   { href: "/admin/chat", label: "Chat", icon: IconChat, roles: ["advisor", "manager", "admin"] },
   { href: "/admin/analytics", label: "Analytics", icon: IconChart, roles: ["manager", "admin"] },
+  { href: "/admin/sync", label: "Data sync", icon: IconSync, roles: ["manager", "admin"] },
   { href: "/admin/users", label: "Staff & users", icon: IconUsers, roles: ["admin"] },
   { href: "/admin/audit", label: "Audit trail", icon: IconClock, roles: ["admin"] },
   { href: "/admin/outbox", label: "SF outbox", icon: IconSend, roles: ["admin"] },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PageHeader, Card, Stat, Pill, statusTone } from "@/components/ui";
 import { getSessionUser } from "@/lib/auth";
-import { q, ah, sf } from "@/lib/db";
+import { q, ah } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -9,8 +9,8 @@ export default async function AdminHome() {
   const user = (await getSessionUser())!;
   const staff = ["manager", "admin"].includes(user.role);
 
-  const [funnel, pendingLinks, reviewItems, reviewDocs, openChats, outbox, students, recent] = await Promise.all([
-    q<{ k: string; n: number }>(`SELECT "TargetX_SRMb__Status__c" AS k, count(*)::int AS n FROM ${sf("contact")} WHERE "TargetX_SRMb__Status__c" IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 8`),
+  const [funnel, pendingLinks, reviewItems, reviewDocs, openChats, outbox, students, recent, lastSync] = await Promise.all([
+    q<{ k: string; n: number }>(`SELECT status AS k, count(*)::int AS n FROM ${ah("sf_contact")} WHERE status IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 8`),
     q<{ n: number }>(`SELECT count(*)::int AS n FROM ${ah("portal_identity_links")} WHERE status='pending_review'`),
     q<{ n: number }>(`SELECT count(*)::int AS n FROM ${ah("portal_checklist_items")} WHERE status='submitted'`),
     q<{ n: number }>(`SELECT count(*)::int AS n FROM ${ah("portal_documents")} WHERE status='uploaded'`),
@@ -18,6 +18,7 @@ export default async function AdminHome() {
     q<{ n: number }>(`SELECT count(*)::int AS n FROM ${ah("portal_outbox")} WHERE status='pending'`),
     q<{ n: number }>(`SELECT count(*)::int AS n FROM ${ah("portal_users")} WHERE role='student'`),
     q<{ kind: string; path: string; created_at: string; email: string }>(`SELECT a.kind, a.path, a.created_at, u.email FROM ${ah("portal_activity")} a LEFT JOIN ${ah("portal_users")} u ON u.id=a.user_id ORDER BY a.id DESC LIMIT 10`),
+    q<{ t: string | null }>(`SELECT max(finished_at) AS t FROM ${ah("sf_sync_runs")} WHERE status='ok'`).catch(() => ({ rows: [{ t: null }] })),
   ]);
 
   const funnelTotal = funnel.rows.reduce((a, r) => a + r.n, 0);
@@ -31,6 +32,11 @@ export default async function AdminHome() {
         <Link href="/admin/match"><Stat label="Links to verify" value={pendingLinks.rows[0].n} sub="partial matches" /></Link>
         <Link href="/admin/chat"><Stat label="Open chats" value={openChats.rows[0].n} sub="awaiting advisor" /></Link>
         <Stat label="Portal students" value={students.rows[0].n} sub="signed up" />
+        {staff && (
+          <Link href="/admin/sync">
+            <Stat label="SF clone" value={lastSync.rows[0].t ? new Date(lastSync.rows[0].t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "never"} sub="last successful sync" />
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

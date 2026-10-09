@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="920" viewBox="0 0 1160 920" font-family="ui-sans-serif, system-ui, Helvetica, Arial">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#555"/>
+    </marker>
+    <marker id="arrR" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#cc0000"/>
+    </marker>
+  </defs>
+  <rect width="1160" height="920" fill="#fff"/>
+
+  <text x="40" y="44" font-size="24" font-weight="700" fill="#111">April portal — RaiderConnect handoff, data &amp; identity pipeline</text>
+  <text x="40" y="66" font-size="13" fill="#666">tosmonline0001.ttu.edu/sim/AHPortal (public cert) · apply on RaiderConnect (top-level) · Salesforce stays the system of record · humans gate every write-back</text>
+
+  <!-- ══ ROW 1: Salesforce / RaiderConnect / Lumen pipes ══ -->
+  <rect x="40" y="90" width="300" height="110" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="58" y="118" font-size="15" font-weight="700" fill="#111">RaiderConnect (SF Site)</text>
+  <text x="58" y="138" font-size="11" fill="#444">texastech.my.site.com/online</text>
+  <text x="58" y="156" font-size="11" fill="#444">the official apply form — demographics,</text>
+  <text x="58" y="172" font-size="11" fill="#444">disciplinary, program/term selection</text>
+  <text x="58" y="190" font-size="10.5" fill="#cc0000">no iframe: XFO SAMEORIGIN — handoff only</text>
+
+  <rect x="430" y="90" width="300" height="110" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="448" y="118" font-size="15" font-weight="700" fill="#111">Salesforce</text>
+  <text x="448" y="138" font-size="11.5" fill="#444">system of record</text>
+  <text x="448" y="156" font-size="11" fill="#444">contact · application ·</text>
+  <text x="448" y="172" font-size="11" fill="#444">Checklist_Item · documents (ContentDoc)</text>
+
+  <rect x="820" y="90" width="300" height="110" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="838" y="118" font-size="15" font-weight="700" fill="#111">lumen_warehouse</text>
+  <text x="838" y="138" font-size="11" fill="#444">sf_origin — full SF mirror (6h sync)</text>
+  <text x="838" y="156" font-size="11" fill="#444">AH.applications — curated app copy</text>
+  <text x="838" y="172" font-size="11" fill="#444">AH.checklist_items — per-item pipe</text>
+  <text x="838" y="190" font-size="10.5" fill="#cc0000">READ-ONLY to the portal — never written</text>
+
+  <line x1="340" y1="145" x2="422" y2="145" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="352" y="134" font-size="10.5" fill="#666">student submits →</text>
+  <line x1="730" y1="145" x2="812" y2="145" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="736" y="134" font-size="10.5" fill="#666">Lumen connectors</text>
+
+  <!-- ══ ROW 2: app database ══ -->
+  <text x="60" y="262" font-size="13.5" font-weight="700" fill="#111">AHPortalDB — schema AH (portal-owned)</text>
+  <text x="372" y="262" font-size="11.5" fill="#666">the only database the portal writes · app reads sf_origin via clone only</text>
+
+  <line x1="968" y1="200" x2="968" y2="232" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="838" y="222" font-size="11.5" font-weight="700" fill="#111">SYNC ENGINE — every 15 min</text>
+  <text x="838" y="238" font-size="10.5" fill="#666">advisory-locked · boot catch-up · /admin/sync “Refresh now”</text>
+
+  <rect x="60" y="280" width="230" height="140" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="76" y="308" font-size="13" font-weight="700" fill="#111">sf_* clone — current state</text>
+  <text x="76" y="328" font-size="11" fill="#444">sf_contact (76K online slice)</text>
+  <text x="76" y="344" font-size="11" fill="#444">sf_application (33K) + rollups</text>
+  <text x="76" y="360" font-size="11" fill="#444">sf_checklist_item (55K, TTU Online)</text>
+  <text x="76" y="378" font-size="10.5" fill="#666">upsert by SF Id · hash-diffed</text>
+  <text x="76" y="394" font-size="10.5" fill="#666">all app reads hit this copy</text>
+
+  <line x1="175" y1="420" x2="175" y2="448" stroke="#555" stroke-width="1.4" marker-end="url(#arr)"/>
+  <text x="186" y="440" font-size="10.5" fill="#666">row changed? (row_hash diff) → append</text>
+
+  <rect x="60" y="452" width="230" height="82" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="76" y="478" font-size="13" font-weight="700" fill="#111">sf_*_hist — append-only</text>
+  <text x="76" y="498" font-size="11" fill="#444">contact · application · checklist item</text>
+  <text x="76" y="514" font-size="10.5" fill="#666">every observed state kept, timestamped</text>
+
+  <rect x="320" y="280" width="230" height="140" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="336" y="308" font-size="13" font-weight="700" fill="#111">portal_* — app data</text>
+  <text x="336" y="328" font-size="11" fill="#444">users · sessions · applications</text>
+  <text x="336" y="344" font-size="11" fill="#444">(apply-intent + detected SF app)</text>
+  <text x="336" y="360" font-size="11" fill="#444">documents · chat · notes · activity</text>
+  <text x="336" y="378" font-size="10.5" fill="#666">signup + intent + uploads land here first</text>
+  <text x="336" y="394" font-size="10.5" fill="#666">portal_checklist = fallback until SF lands</text>
+
+  <line x1="435" y1="420" x2="435" y2="448" stroke="#555" stroke-width="1.4" marker-end="url(#arr)"/>
+  <text x="446" y="440" font-size="10.5" fill="#666">every status write →</text>
+
+  <rect x="320" y="452" width="230" height="82" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="336" y="478" font-size="13" font-weight="700" fill="#111">portal_application_events</text>
+  <text x="336" y="498" font-size="11" fill="#444">stateful pipeline: from → to, actor, ts</text>
+  <text x="336" y="514" font-size="10.5" fill="#666">rc_started → submitted → under_review → …</text>
+
+  <rect x="580" y="280" width="240" height="140" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="596" y="308" font-size="13" font-weight="700" fill="#111">portal_contact_projection</text>
+  <text x="596" y="328" font-size="11" fill="#444">generated columns per linked contact:</text>
+  <text x="596" y="346" font-size="11" fill="#444">portal user · app id · status · history</text>
+  <text x="596" y="362" font-size="11" fill="#444">SF app status · checklist n/n · open items</text>
+  <text x="596" y="378" font-size="11" fill="#444">docs pending · decision · last SF change</text>
+  <text x="596" y="398" font-size="10.5" fill="#666">rebuilt each sync + on every link/status change</text>
+
+  <rect x="580" y="452" width="240" height="82" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="596" y="478" font-size="13" font-weight="700" fill="#111">detect + parity jobs (per sync)</text>
+  <text x="596" y="498" font-size="11" fill="#444">new SF app on linked contact → attach,</text>
+  <text x="596" y="514" font-size="11" fill="#444">fire 'submitted' event · pushed doc whose</text>
+  <text x="596" y="528" font-size="11" fill="#444">SF item shows received → approved</text>
+
+  <rect x="880" y="280" width="240" height="140" rx="10" fill="#fff" stroke="#cc0000" stroke-width="1.4"/>
+  <text x="896" y="308" font-size="13" font-weight="700" fill="#cc0000">portal_outbox — the human gate</text>
+  <text x="896" y="328" font-size="11" fill="#444">every SF-bound change = a work item:</text>
+  <text x="896" y="346" font-size="11" fill="#444">link confirm · merge request</text>
+  <text x="896" y="362" font-size="11" fill="#444">status override · doc pushed</text>
+  <text x="896" y="382" font-size="10.5" fill="#666">staff applies each row in Salesforce by</text>
+  <text x="896" y="396" font-size="10.5" fill="#666">hand, then marks it done</text>
+
+  <rect x="880" y="452" width="240" height="82" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="896" y="478" font-size="13" font-weight="700" fill="#111">sf_sync_runs</text>
+  <text x="896" y="498" font-size="10.5" fill="#666">every refresh logged: trigger, counts, ms, error</text>
+  <text x="896" y="514" font-size="10.5" fill="#666">powers the /admin/sync status + history screen</text>
+
+  <!-- ══ ROW 3: apply + identity ══ -->
+  <line x1="40" y1="560" x2="1120" y2="560" stroke="#eee"/>
+  <text x="40" y="592" font-size="13.5" font-weight="700" fill="#111">Apply flow — student experience</text>
+
+  <rect x="40" y="610" width="250" height="120" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="56" y="636" font-size="13" font-weight="700" fill="#111">1 · Pick in the portal</text>
+  <text x="56" y="656" font-size="11" fill="#444">modality (8/16-week) · program</text>
+  <text x="56" y="672" font-size="11" fill="#444">(37-program RC catalog) · term</text>
+  <text x="56" y="692" font-size="10.5" fill="#666">saves a portal_applications intent row</text>
+  <text x="56" y="708" font-size="10.5" fill="#666">status rc_started + event logged</text>
+
+  <line x1="290" y1="670" x2="358" y2="670" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="360" y="610" width="250" height="120" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="376" y="636" font-size="13" font-weight="700" fill="#111">2 · RaiderConnect (same tab)</text>
+  <text x="376" y="656" font-size="11" fill="#444">sign in → UG → Fully Online →</text>
+  <text x="376" y="672" font-size="11" fill="#444">modality → program → complete form</text>
+  <text x="376" y="692" font-size="10.5" fill="#666">SF creates/updates the application</text>
+  <text x="376" y="708" font-size="10.5" fill="#666">+ its checklist items + received docs</text>
+
+  <line x1="610" y1="670" x2="678" y2="670" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="680" y="610" width="250" height="120" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="696" y="636" font-size="13" font-weight="700" fill="#111">3 · Back in the portal</text>
+  <text x="696" y="656" font-size="11" fill="#444">auto-poll every 30s + on tab focus</text>
+  <text x="696" y="672" font-size="11" fill="#444">+ “I've submitted — check now”</text>
+  <text x="696" y="692" font-size="10.5" fill="#666">detects the new app on their contact →</text>
+  <text x="696" y="708" font-size="10.5" fill="#666">portal app → submitted; checklist = SF</text>
+
+  <rect x="960" y="610" width="160" height="120" rx="10" fill="#fff" stroke="#cc0000" stroke-width="1.4"/>
+  <text x="976" y="636" font-size="12.5" font-weight="700" fill="#cc0000">General Business</text>
+  <text x="976" y="656" font-size="11" fill="#444">requirements still</text>
+  <text x="976" y="672" font-size="11" fill="#444">pending on TTU's side</text>
+  <text x="976" y="692" font-size="10.5" fill="#666">portal shows “requirements</text>
+  <text x="976" y="706" font-size="10.5" fill="#666">coming soon” until SF lands</text>
+
+  <!-- ══ ROW 4: identity matching ══ -->
+  <line x1="40" y1="770" x2="1120" y2="770" stroke="#eee"/>
+  <text x="40" y="800" font-size="13.5" font-weight="700" fill="#111">Identity — how a portal signup meets a Salesforce record</text>
+
+  <rect x="40" y="816" width="200" height="88" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="56" y="842" font-size="13" font-weight="700" fill="#111">Student signs up</text>
+  <text x="56" y="862" font-size="11" fill="#444">email · phone · name</text>
+  <text x="56" y="880" font-size="10.5" fill="#666">(may differ from their lead data)</text>
+
+  <line x1="240" y1="860" x2="298" y2="860" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="300" y="816" width="220" height="88" rx="10" fill="#fafafa" stroke="#ddd"/>
+  <text x="316" y="842" font-size="13" font-weight="700" fill="#111">Matcher → confidence</text>
+  <text x="316" y="860" font-size="10.5" fill="#444">email 40 · phone 35 · last name 15 · first 10</text>
+  <text x="316" y="876" font-size="10.5" fill="#666">against the 76K sf_contact clone</text>
+  <text x="316" y="892" font-size="10.5" fill="#666">SF address shown to reviewer (unscored)</text>
+
+  <line x1="520" y1="860" x2="578" y2="860" stroke="#555" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="580" y="806" width="540" height="110" rx="10" fill="#fff" stroke="#bbb"/>
+  <text x="596" y="830" font-size="12.5" font-weight="700" fill="#111">Four tiers — human decides except the strong signals</text>
+  <text x="596" y="850" font-size="11" fill="#444"><tspan font-weight="700">email+phone+name</tspan> → auto-link (auto_full) · <tspan font-weight="700">email+phone</tspan> → auto-link but flagged for admin eyeball (auto_pair)</text>
+  <text x="596" y="868" font-size="11" fill="#444"><tspan font-weight="700">one field hit</tspan> → pending_review: admin sees every scored candidate + field chips</text>
+  <text x="596" y="886" font-size="11" fill="#444"><tspan font-weight="700">no hit</tspan> → unlinked lane; admin browses/searches ALL 3.6M warehouse contacts</text>
+  <text x="596" y="906" font-size="10.5" fill="#666">confirm/reject/manual link → portal_identity_links + outbox merge-review ticket</text>
+
+  <!-- ══ edge / deploy ══ -->
+  <text x="40" y="60" font-size="0" fill="#999">.</text>
+  <rect x="1000" y="20" width="130" height="46" rx="8" fill="#fff" stroke="#bbb"/>
+  <text x="1012" y="38" font-size="10.5" font-weight="700" fill="#111">Edge: nginx :443 (0001)</text>
+  <text x="1012" y="54" font-size="10" fill="#666">/sim/AHPortal → 127.0.0.1:3210</text>
+  <text x="1012" y="68" font-size="10" fill="#666">DB via SSH tunnel → 0003:5432</text>
+</svg>

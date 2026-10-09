@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { asset } from "@/lib/asset";
 import { listPrograms } from "@/lib/sf";
 import { IconArrowR, IconCheckCircle } from "@/components/icons";
 import { ChatWidget } from "@/components/ChatWidget";
@@ -51,7 +52,7 @@ export default async function Landing() {
 
       {/* hero — black band w/ ghosted Double-T */}
       <section className="relative overflow-hidden bg-ink text-white">
-        <img src="/logo.png" alt="" aria-hidden
+        <img src={asset("/logo.png")} alt="" aria-hidden
           className="pointer-events-none absolute -right-10 top-1/2 hidden w-[440px] -translate-y-1/2 opacity-[0.13] mix-blend-screen sm:block lg:-right-2 lg:w-[540px]"
           style={{ filter: "invert(1) grayscale(1) contrast(1.1)" }} />
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 sm:pb-20 sm:pt-24">

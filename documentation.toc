@@ -1,6 +1,6 @@
 \contentsline {chapter}{\numberline {1}What This System Is}{4}{chapter.1}%
 \contentsline {section}{\numberline {1.1}The Big Picture}{4}{section.1.1}%
-\contentsline {section}{\numberline {1.2}The Problem It Solves}{4}{section.1.2}%
+\contentsline {section}{\numberline {1.2}The Problem It Solves}{5}{section.1.2}%
 \contentsline {section}{\numberline {1.3}What It Looks Like}{5}{section.1.3}%
 \contentsline {chapter}{\numberline {2}The People and Their Roles}{6}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Four Levels of Access}{6}{section.2.1}%
@@ -8,50 +8,51 @@
 \contentsline {chapter}{\numberline {3}The Student Journey, Step by Step}{8}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Step 1 --- Signing Up}{8}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Step 2 --- The Identity Match}{8}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Step 3 --- The Application}{9}{section.3.3}%
-\contentsline {section}{\numberline {3.4}Step 4 --- The Checklist}{9}{section.3.4}%
-\contentsline {section}{\numberline {3.5}Step 5 --- Documents}{10}{section.3.5}%
-\contentsline {section}{\numberline {3.6}Step 6 --- Messaging}{10}{section.3.6}%
-\contentsline {section}{\numberline {3.7}Step 7 --- Sharing the Moment}{10}{section.3.7}%
-\contentsline {chapter}{\numberline {4}The Staff Side: The Admin Portal}{11}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Dashboard}{11}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Leads}{11}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Applications}{11}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Person 360}{11}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Match \& Merge}{12}{section.4.5}%
-\contentsline {section}{\numberline {4.6}Review Queue}{12}{section.4.6}%
-\contentsline {section}{\numberline {4.7}Status Changes and the Outbox}{12}{section.4.7}%
-\contentsline {section}{\numberline {4.8}Live Chat}{13}{section.4.8}%
-\contentsline {section}{\numberline {4.9}Users \& Roles}{13}{section.4.9}%
-\contentsline {section}{\numberline {4.10}Audit Trail}{13}{section.4.10}%
-\contentsline {section}{\numberline {4.11}Analytics}{14}{section.4.11}%
-\contentsline {chapter}{\numberline {5}Where the Data Lives}{15}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Two Schemas, Two Responsibilities}{15}{section.5.1}%
-\contentsline {section}{\numberline {5.2}The Key Tables, in Plain Language}{16}{section.5.2}%
-\contentsline {section}{\numberline {5.3}How Sync Works --- Slowly, On Purpose}{16}{section.5.3}%
-\contentsline {chapter}{\numberline {6}Cybersecurity, Explained for Non-Engineers}{18}{chapter.6}%
-\contentsline {section}{\numberline {6.1}The Layer Cake}{18}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Layer 1 --- Passwords}{18}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Layer 2 --- Multi-Factor Authentication}{18}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Layer 3 --- Sessions (Staying Logged In)}{19}{section.6.4}%
-\contentsline {section}{\numberline {6.5}Layer 4 --- Rate Limiting (Brute-Force Armor)}{19}{section.6.5}%
-\contentsline {section}{\numberline {6.6}Layer 5 --- Forgery Protection (CSRF \& CORS)}{20}{section.6.6}%
-\contentsline {section}{\numberline {6.7}Layer 6 --- Security Headers}{20}{section.6.7}%
-\contentsline {section}{\numberline {6.8}Layer 7 --- Injection Defense}{21}{section.6.8}%
-\contentsline {section}{\numberline {6.9}Layer 8 --- Files (Documents)}{21}{section.6.9}%
-\contentsline {section}{\numberline {6.10}Layer 9 --- Encryption in Transit}{22}{section.6.10}%
-\contentsline {section}{\numberline {6.11}Layer 10 --- Watching Everything (Audit)}{22}{section.6.11}%
-\contentsline {section}{\numberline {6.12}Layer 11 --- Boot-Time Safety Checks}{22}{section.6.12}%
-\contentsline {section}{\numberline {6.13}The Deliberate Air-Gap}{22}{section.6.13}%
-\contentsline {chapter}{\numberline {7}Running the System Day to Day}{23}{chapter.7}%
-\contentsline {section}{\numberline {7.1}What Staff Do Each Morning}{23}{section.7.1}%
-\contentsline {section}{\numberline {7.2}The Normal Data Flow}{23}{section.7.2}%
-\contentsline {section}{\numberline {7.3}Capacity}{24}{section.7.3}%
-\contentsline {chapter}{\numberline {8}Deployment Plan for \texttt {tosmonline0001.ttu.edu}}{25}{chapter.8}%
-\contentsline {section}{\numberline {8.1}The Shape of Production}{25}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Go-Live Checklist}{25}{section.8.2}%
-\contentsline {section}{\numberline {8.3}What Happens If Something Breaks}{26}{section.8.3}%
-\contentsline {chapter}{\numberline {9}Open Items \& Known Trade-offs}{27}{chapter.9}%
-\contentsline {section}{\numberline {9.1}Still To Receive / Decide}{27}{section.9.1}%
-\contentsline {section}{\numberline {9.2}Honest Limitations}{27}{section.9.2}%
-\contentsline {chapter}{Glossary}{28}{chapter*.2}%
+\contentsline {section}{\numberline {3.3}Step 3 --- The Application (RaiderConnect)}{10}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Step 4 --- The Checklist}{10}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Step 5 --- Documents}{11}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Step 6 --- Messaging}{11}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Step 7 --- Sharing the Moment}{12}{section.3.7}%
+\contentsline {chapter}{\numberline {4}The Staff Side: The Admin Portal}{13}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Dashboard}{13}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Leads}{13}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Applications}{13}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Person 360}{13}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Match \& Merge}{14}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Review Queue}{15}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Status Changes and the Outbox}{15}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Live Chat}{15}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Users \& Roles}{15}{section.4.9}%
+\contentsline {section}{\numberline {4.10}Audit Trail}{15}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Analytics}{16}{section.4.11}%
+\contentsline {chapter}{\numberline {5}Where the Data Lives}{17}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Three Zones, Three Responsibilities}{17}{section.5.1}%
+\contentsline {section}{\numberline {5.2}The Key Tables, in Plain Language}{18}{section.5.2}%
+\contentsline {section}{\numberline {5.3}How Sync Works --- Clone Down, Queue Up}{19}{section.5.3}%
+\contentsline {chapter}{\numberline {6}Cybersecurity, Explained for Non-Engineers}{21}{chapter.6}%
+\contentsline {section}{\numberline {6.1}The Layer Cake}{21}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Layer 1 --- Passwords}{21}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Layer 2 --- Multi-Factor Authentication}{21}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Layer 3 --- Sessions (Staying Logged In)}{22}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Layer 4 --- Rate Limiting (Brute-Force Armor)}{22}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Layer 5 --- Forgery Protection (CSRF \& CORS)}{23}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Layer 6 --- Security Headers}{23}{section.6.7}%
+\contentsline {section}{\numberline {6.8}Layer 7 --- Injection Defense}{24}{section.6.8}%
+\contentsline {section}{\numberline {6.9}Layer 8 --- Files (Documents)}{24}{section.6.9}%
+\contentsline {section}{\numberline {6.10}Layer 9 --- Encryption in Transit}{25}{section.6.10}%
+\contentsline {section}{\numberline {6.11}Layer 10 --- Watching Everything (Audit)}{25}{section.6.11}%
+\contentsline {section}{\numberline {6.12}Layer 11 --- Boot-Time Safety Checks}{25}{section.6.12}%
+\contentsline {section}{\numberline {6.13}The Deliberate Air-Gap}{25}{section.6.13}%
+\contentsline {chapter}{\numberline {7}Running the System Day to Day}{26}{chapter.7}%
+\contentsline {section}{\numberline {7.1}What Staff Do Each Morning}{26}{section.7.1}%
+\contentsline {section}{\numberline {7.2}The Normal Data Flow}{27}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Capacity}{27}{section.7.3}%
+\contentsline {chapter}{\numberline {8}Production --- \texttt {tosmonline0001.ttu.edu}}{28}{chapter.8}%
+\contentsline {section}{\numberline {8.1}The Shape of Production (as deployed)}{28}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Go-Live Checklist (what was actually done)}{29}{section.8.2}%
+\contentsline {section}{\numberline {8.3}Staff Accounts \& Where They Live}{29}{section.8.3}%
+\contentsline {section}{\numberline {8.4}What Happens If Something Breaks}{30}{section.8.4}%
+\contentsline {chapter}{\numberline {9}Open Items \& Known Trade-offs}{31}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Still To Receive / Decide}{31}{section.9.1}%
+\contentsline {section}{\numberline {9.2}Honest Limitations}{31}{section.9.2}%
+\contentsline {chapter}{Glossary}{32}{chapter*.2}%

@@ -138,12 +138,49 @@ export default function PersonPage({ params, searchParams }: {
                 <Pill tone={statusTone(d.portalApplication.status)}>{d.portalApplication.status}</Pill>
               </div>
               <div className="mt-2 text-sm">{d.portalApplication.program_name} · {d.portalApplication.term}</div>
+              {!!d.appEvents?.length && (
+                <div className="mt-4 border-t border-line pt-3">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-mute">Status timeline</div>
+                  <ol className="relative ml-2 space-y-3 border-l border-line pl-4">
+                    {d.appEvents.map((e: any) => (
+                      <li key={e.id} className="relative text-sm">
+                        <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-ink" />
+                        <span className="font-medium">{e.from_status ? `${e.from_status.replace(/_/g, " ")} → ` : "started as "}{e.to_status.replace(/_/g, " ")}</span>
+                        <div className="text-xs text-mute">
+                          {new Date(e.created_at).toLocaleString()} · {e.actor_name || e.actor_kind}
+                          {e.note ? ` · ${e.note}` : ""}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {!!d.sfChecklist?.length && (
+            <Card>
+              <div className="flex items-center justify-between px-5 py-3.5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-mute">SF checklist — {d.applications?.[0]?.app_number}</span>
+                <span className="text-xs text-mute">{d.sfChecklist.filter((i: any) => i.done).length}/{d.sfChecklist.length} received</span>
+              </div>
+              <div className="divide-y divide-line">
+                {d.sfChecklist.map((it: any) => (
+                  <div key={it.id} className="flex items-center justify-between gap-3 px-5 py-2.5">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm">{it.name ?? it.req_code ?? "Requirement"}</div>
+                      {it.req_code && <div className="text-[11px] text-mute">{it.req_code}</div>}
+                    </div>
+                    <Pill tone={it.done ? "ok" : "mute"}>{it.done ? "received" : it.status ?? "open"}</Pill>
+                  </div>
+                ))}
+              </div>
             </Card>
           )}
 
           {!!d.checklist?.length && (
             <Card>
-              <div className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-mute">Checklist</div>
+              <div className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wide text-mute">Portal checklist</div>
               <div className="divide-y divide-line">
                 {d.checklist.map((it: any) => (
                   <div key={it.id} className="flex items-center justify-between px-5 py-3">

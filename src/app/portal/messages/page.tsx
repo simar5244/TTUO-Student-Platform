@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { asset } from "@/lib/asset";
 import { PageHeader, Button, Spinner } from "@/components/ui";
 import { IconSend } from "@/components/icons";
 
@@ -51,7 +52,7 @@ export default function MessagesPage() {
         {!msgs.length && (
           <div className="flex h-full flex-col items-center justify-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/mascot/encourage.png" alt="Raider Red" className="h-24 w-24 object-contain" />
+            <img src={asset("/mascot/encourage.png")} alt="Raider Red" className="h-24 w-24 object-contain" />
             <p className="mt-3 max-w-xs text-sm text-mute">Raider Red is here! Ask anything about your application, requirements, or deadlines.</p>
           </div>
         )}
@@ -59,7 +60,7 @@ export default function MessagesPage() {
           <div key={m.id} className={`flex ${m.sender_kind === "student" ? "justify-end" : "justify-start"}`}>
             {m.sender_kind === "bot" && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src="/mascot/encourage.png" alt="Raider Red" className="mr-2 mt-1 h-8 w-8 shrink-0 rounded-full border border-line bg-white object-cover object-top" />
+              <img src={asset("/mascot/encourage.png")} alt="Raider Red" className="mr-2 mt-1 h-8 w-8 shrink-0 rounded-full border border-line bg-white object-cover object-top" />
             )}
             <div className={`max-w-[80%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed ${
               m.sender_kind === "student" ? "rounded-br-sm bg-ink text-white"

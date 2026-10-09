@@ -3,6 +3,7 @@
 // Floating chat bubble for the public landing page — nudges visitors to sign up
 // or log in to chat. Logged-in users get redirected to /portal/messages.
 import { useState } from "react";
+import { asset } from "@/lib/asset";
 import Link from "next/link";
 import { IconChat, IconX, IconSend } from "./icons";
 
@@ -19,7 +20,7 @@ export function ChatWidget() {
           <div className="border-b border-line px-4 py-3">
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/mascot/encourage.png" alt="Raider Red" className="h-9 w-9 rounded-full border border-line bg-smoke object-cover object-top" />
+              <img src={asset("/mascot/encourage.png")} alt="Raider Red" className="h-9 w-9 rounded-full border border-line bg-smoke object-cover object-top" />
               <div>
                 <div className="text-sm font-semibold">Questions?</div>
                 <div className="text-xs text-mute">Chat with Raider Red or an advisor</div>

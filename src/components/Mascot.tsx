@@ -1,11 +1,12 @@
 import React from "react";
+import { asset } from "@/lib/asset";
 
 export type MascotState = "sad" | "encourage" | "celebrate";
 
 const SRC: Record<MascotState, string> = {
-  sad: "/mascot/sad.png",
-  encourage: "/mascot/encourage.png",
-  celebrate: "/mascot/celebrate.png",
+  sad: asset("/mascot/sad.png"),
+  encourage: asset("/mascot/encourage.png"),
+  celebrate: asset("/mascot/celebrate.png"),
 };
 
 // Raider Red — appears on the student dashboard and adapts to their journey.

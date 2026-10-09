@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.1)  1 OCT 2026 11:54
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.1)  9 OCT 2026 12:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -11,15 +11,15 @@ Document Class: report 2025/01/22 v1.4n Standard LaTeX document class
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/base/size11.clo
 File: size11.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
 )
-\c@part=\count275
-\c@chapter=\count276
-\c@section=\count277
-\c@subsection=\count278
-\c@subsubsection=\count279
-\c@paragraph=\count280
-\c@subparagraph=\count281
-\c@figure=\count282
-\c@table=\count283
+\c@part=\count271
+\c@chapter=\count272
+\c@section=\count273
+\c@subsection=\count274
+\c@subsubsection=\count275
+\c@paragraph=\count276
+\c@subparagraph=\count277
+\c@figure=\count278
+\c@table=\count279
 \abovecaptionskip=\skip49
 \belowcaptionskip=\skip50
 \bibindent=\dimen148
@@ -37,9 +37,9 @@ Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
 (/usr/local/texlive/2026basic/texmf-dist/tex/generic/iftex/iftex.sty
 Package: iftex 2024/12/12 v1.0g TeX engine tests
 ))
-\Gm@cnth=\count284
-\Gm@cntv=\count285
-\c@Gm@tempcnt=\count286
+\Gm@cnth=\count280
+\Gm@cntv=\count281
+\c@Gm@tempcnt=\count282
 \Gm@bindingoffset=\dimen149
 \Gm@wd@mp=\dimen150
 \Gm@odd@mp=\dimen151
@@ -52,13 +52,21 @@ Package: iftex 2024/12/12 v1.0g TeX engine tests
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/base/fontenc.sty
 Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
-)
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 11
+6.
+
+(/usr/local/texlive/2026basic/texmf-dist/tex/latex/lm/t1lmr.fd
+File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+))
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/base/inputenc.sty
 Package: inputenc 2024/02/08 v1.3d Input encoding file
 \inpenc@prehook=\toks19
 \inpenc@posthook=\toks20
-)
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/lm/lmodern.sty
+
+
+Package inputenc Warning: inputenc package ignored with utf8 based engines.
+
+) (/usr/local/texlive/2026basic/texmf-dist/tex/latex/lm/lmodern.sty
 Package: lmodern 2015/05/01 v1.6.1 Latin Modern Fonts
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> OT1/lmr/m/n on input line 22.
@@ -99,14 +107,13 @@ Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics-cfg/color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
-Package xcolor Info: Driver file: pdftex.def on input line 274.
+Package xcolor Info: Driver file: xetex.def on input line 274.
 
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics-def/pdftex.def
-File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
+(/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics-def/xetex.def
+File: xetex.def 2025/11/01 v5.0p Graphics/color driver for xetex
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics/mathcolor.ltx)
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
-Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
 Package xcolor Info: Model `RGB' extended on input line 1365.
 Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
 Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
@@ -127,7 +134,7 @@ Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
-Package graphics Info: Driver file: pdftex.def on input line 106.
+Package graphics Info: Driver file: xetex.def on input line 106.
 )
 \Gin@req@height=\dimen157
 \Gin@req@width=\dimen158
@@ -143,12 +150,12 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \cmidrulesep=\dimen166
 \cmidrulekern=\dimen167
 \defaultaddspace=\dimen168
-\@cmidla=\count287
-\@cmidlb=\count288
+\@cmidla=\count283
+\@cmidlb=\count284
 \@aboverulesep=\dimen169
 \@belowrulesep=\dimen170
-\@thisruleclass=\count289
-\@lastruleclass=\count290
+\@thisruleclass=\count285
+\@lastruleclass=\count286
 \@thisrulewidth=\dimen171
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/tools/longtable.sty
@@ -157,17 +164,17 @@ Package: longtable 2025-10-13 v4.24 Multi-page Table package (DPC)
 \LTright=\skip52
 \LTpre=\skip53
 \LTpost=\skip54
-\LTchunksize=\count291
+\LTchunksize=\count287
 \LTcapwidth=\dimen172
 \LT@head=\box53
 \LT@firsthead=\box54
 \LT@foot=\box55
 \LT@lastfoot=\box56
 \LT@gbox=\box57
-\LT@cols=\count292
-\LT@rows=\count293
-\c@LT@tables=\count294
-\c@LT@chunks=\count295
+\LT@cols=\count288
+\LT@rows=\count289
+\c@LT@tables=\count290
+\c@LT@chunks=\count291
 \LT@p@ftn=\toks21
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/tools/array.sty
@@ -186,8 +193,8 @@ Package: enumitem 2025/02/06 v3.11 Customized lists
 \enit@outerparindent=\dimen175
 \enit@toks=\toks23
 \enit@inbox=\box60
-\enit@count@id=\count296
-\enitdp@description=\count297
+\enit@count@id=\count292
+\enitdp@description=\count293
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 Package: fancyhdr 2025/02/07 v5.2 Extensive control of page headers and footers
@@ -248,7 +255,7 @@ Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
 )
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
-Package pdftexcmds Info: \pdfdraftmode found.
+Package pdftexcmds Info: \pdfdraftmode not found.
 )) (/usr/local/texlive/2026basic/texmf-dist/tex/latex/hycolor/hycolor.sty
 Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
 )
@@ -265,34 +272,30 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/kvoptions/kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
-\c@section@level=\count298
+\c@section@level=\count294
 )
 (/Users/sim/Library/texmf/tex/latex/etoolbox/etoolbox.sty
 Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count299
+\etb@tempcnta=\count295
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/generic/stringenc/stringenc.sty
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
 \@linkdim=\dimen181
-\Hy@linkcounter=\count300
-\Hy@pagecounter=\count301
+\Hy@linkcounter=\count296
+\Hy@pagecounter=\count297
 
 (/Users/sim/Library/texmf/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2026-06-17 v7.01r Hyperref: PDFDocEncoding definition (HO)
-Now handling font encoding PD1 ...
-... no UTF-8 mapping file for font encoding PD1
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/generic/intcalc/intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count302
+\Hy@SavedSpaceFactor=\count298
 
 (/Users/sim/Library/texmf/tex/latex/hyperref/puenc.def
 File: puenc.def 2026-06-17 v7.01r Hyperref: PDF Unicode definition (HO)
-Now handling font encoding PU ...
-... no UTF-8 mapping file for font encoding PU
 )
 Package hyperref Info: Option `colorlinks' set `true' on input line 4070.
 Package hyperref Info: Hyper figures OFF on input line 4199.
@@ -302,7 +305,7 @@ Package hyperref Info: Plain pages OFF on input line 4214.
 Package hyperref Info: Backreferencing OFF on input line 4219.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4466.
-\c@Hy@tempcnt=\count303
+\c@Hy@tempcnt=\count299
 
 (/Users/sim/Library/texmf/tex/latex/url/url.sty
 \Urlmuskip=\muskip17
@@ -318,7 +321,7 @@ Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count304
+\Fld@menulength=\count300
 \Field@Width=\dimen183
 \Fld@charsize=\dimen184
 Package hyperref Info: Hyper figures OFF on input line 6091.
@@ -328,15 +331,18 @@ Package hyperref Info: backreferencing OFF on input line 6106.
 Package hyperref Info: Link coloring ON on input line 6109.
 Package hyperref Info: Link coloring with OCG OFF on input line 6116.
 Package hyperref Info: PDF/A mode OFF on input line 6121.
-\Hy@abspage=\count305
-\c@Item=\count306
-\c@Hfootnote=\count307
+\Hy@abspage=\count301
+\c@Item=\count302
+\c@Hfootnote=\count303
 )
-Package hyperref Info: Driver (autodetected): hpdftex.
- (/Users/sim/Library/texmf/tex/latex/hyperref/hpdftex.def
-File: hpdftex.def 2026-06-17 v7.01r Hyperref driver for pdfTeX
-\Fld@listcount=\count308
-\c@bookmark@seq@number=\count309
+Package hyperref Info: Driver (autodetected): hxetex.
+ (/Users/sim/Library/texmf/tex/latex/hyperref/hxetex.def
+File: hxetex.def 2026-06-17 v7.01r Hyperref driver for XeTeX
+\pdfm@box=\box62
+\c@Hy@AnnotLevel=\count304
+\HyField@AnnotCount=\count305
+\Fld@listcount=\count306
+\c@bookmark@seq@number=\count307
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/rerunfilecheck/rerunfilechec
 k.sty
@@ -362,7 +368,7 @@ Package: tcolorbox 2026/05/28 version 6.10.0 text color boxes
 \pgfutil@tempdimb=\dimen186
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/utilities/pgfutil-latex.def
-\pgfutil@abb=\box62
+\pgfutil@abb=\box63
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/utilities/pgfrcs.code.tex
 (/Users/sim/Library/texmf/tex/generic/pgf/pgf.revision.tex)
@@ -395,31 +401,35 @@ Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@yd=\dimen196
 \w@pgf@writea=\write3
 \r@pgf@reada=\read2
-\c@pgf@counta=\count310
-\c@pgf@countb=\count311
-\c@pgf@countc=\count312
-\c@pgf@countd=\count313
+\c@pgf@counta=\count308
+\c@pgf@countb=\count309
+\c@pgf@countc=\count310
+\c@pgf@countd=\count311
 \t@pgf@toka=\toks30
 \t@pgf@tokb=\toks31
 \t@pgf@tokc=\toks32
-\pgf@sys@id@count=\count314
+\pgf@sys@id@count=\count312
  (/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgf.cfg
 File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
 )
-Driver file for pgf: pgfsys-pdftex.def
+Driver file for pgf: pgfsys-xetex.def
 
-(/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsys-pdftex.def
-File: pgfsys-pdftex.def 2025-08-29 v3.1.11a (3.1.11a)
+(/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsys-xetex.def
+File: pgfsys-xetex.def 2025-08-29 v3.1.11a (3.1.11a)
+
+(/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsys-dvipdfmx.def
+File: pgfsys-dvipdfmx.def 2025-08-29 v3.1.11a (3.1.11a)
 
 (/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsys-common-pdf.def
 File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
-)))
-(/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.tex
-File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfsyssoftpath@smallbuffer@items=\count315
-\pgfsyssoftpath@bigbuffer@items=\count316
 )
-(/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsysprotocol.code.tex
+\pgfsys@objnum=\count313
+))) (/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.t
+ex
+File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+\pgfsyssoftpath@smallbuffer@items=\count314
+\pgfsyssoftpath@bigbuffer@items=\count315
+) (/Users/sim/Library/texmf/tex/generic/pgf/systemlayer/pgfsysprotocol.code.tex
 File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 )) (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcore.code.tex
 Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
@@ -428,8 +438,8 @@ Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
 (/Users/sim/Library/texmf/tex/generic/pgf/math/pgfmathutil.code.tex)
 (/Users/sim/Library/texmf/tex/generic/pgf/math/pgfmathparser.code.tex
 \pgfmath@dimen=\dimen197
-\pgfmath@count=\count317
-\pgfmath@box=\box63
+\pgfmath@count=\count316
+\pgfmath@box=\box64
 \pgfmath@toks=\toks33
 \pgfmath@stack@operand=\toks34
 \pgfmath@stack@operation=\toks35
@@ -450,7 +460,7 @@ ode.tex)
 ics.code.tex)
 (/Users/sim/Library/texmf/tex/generic/pgf/math/pgfmathcalc.code.tex)
 (/Users/sim/Library/texmf/tex/generic/pgf/math/pgfmathfloat.code.tex
-\c@pgfmathroundto@lastzeros=\count318
+\c@pgfmathroundto@lastzeros=\count317
 ))
 (/Users/sim/Library/texmf/tex/generic/pgf/math/pgfint.code.tex)
 (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcorepoints.code.tex
@@ -482,10 +492,10 @@ File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@shorten@start@additional=\dimen271
 ) (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcorescopes.code.tex
 File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfpic=\box64
-\pgf@hbox=\box65
-\pgf@layerbox@main=\box66
-\pgf@picture@serial@count=\count319
+\pgfpic=\box65
+\pgf@hbox=\box66
+\pgf@layerbox@main=\box67
+\pgf@picture@serial@count=\count318
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcoregraphicstate.code.t
 ex
@@ -516,15 +526,15 @@ File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcoreshade.code.tex
 File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@max=\dimen277
-\pgf@sys@shading@range@num=\count320
-\pgf@shadingcount=\count321
+\pgf@sys@shading@range@num=\count319
+\pgf@shadingcount=\count320
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcoreimage.code.tex
 File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcoreexternal.code.tex
 File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfexternal@startupbox=\box67
+\pgfexternal@startupbox=\box68
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/basiclayer/pgfcorelayers.code.tex
 File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
@@ -541,7 +551,7 @@ File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 )))
 (/Users/sim/Library/texmf/tex/generic/pgf/modules/pgfmoduleshapes.code.tex
 File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfnodeparttextbox=\box68
+\pgfnodeparttextbox=\box69
 )
 (/Users/sim/Library/texmf/tex/generic/pgf/modules/pgfmoduleplot.code.tex
 File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
@@ -571,7 +581,7 @@ Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
 (/Users/sim/Library/texmf/tex/generic/pgf/libraries/pgflibraryplothandlers.code
 .tex
 File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgf@plot@mark@count=\count322
+\pgf@plot@mark@count=\count321
 \pgfplotmarksize=\dimen282
 )
 \tikz@lastx=\dimen283
@@ -582,22 +592,22 @@ File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \tikz@lastmovetoy=\dimen288
 \tikzleveldistance=\dimen289
 \tikzsiblingdistance=\dimen290
-\tikz@figbox=\box69
-\tikz@figbox@bg=\box70
-\tikz@tempbox=\box71
-\tikz@tempbox@bg=\box72
-\tikztreelevel=\count323
-\tikznumberofchildren=\count324
-\tikznumberofcurrentchild=\count325
-\tikz@fig@count=\count326
+\tikz@figbox=\box70
+\tikz@figbox@bg=\box71
+\tikz@tempbox=\box72
+\tikz@tempbox@bg=\box73
+\tikztreelevel=\count322
+\tikznumberofchildren=\count323
+\tikznumberofcurrentchild=\count324
+\tikz@fig@count=\count325
 
 (/Users/sim/Library/texmf/tex/generic/pgf/modules/pgfmodulematrix.code.tex
 File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfmatrixcurrentrow=\count327
-\pgfmatrixcurrentcolumn=\count328
-\pgf@matrix@numberofcolumns=\count329
+\pgfmatrixcurrentrow=\count326
+\pgfmatrixcurrentcolumn=\count327
+\pgf@matrix@numberofcolumns=\count328
 )
-\tikz@expandcount=\count330
+\tikz@expandcount=\count329
 
 (/Users/sim/Library/texmf/tex/generic/pgf/frontendlayer/tikz/libraries/tikzlibr
 arytopaths.code.tex
@@ -617,19 +627,19 @@ Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
 )
 \@envbody=\toks40
 )
-\tcb@titlebox=\box73
-\tcb@upperbox=\box74
-\tcb@lowerbox=\box75
-\tcb@phantombox=\box76
-\c@tcbbreakpart=\count331
-\c@tcblayer=\count332
-\c@tcolorbox@number=\count333
-\l__tcobox_tmpa_box=\box77
+\tcb@titlebox=\box74
+\tcb@upperbox=\box75
+\tcb@lowerbox=\box76
+\tcb@phantombox=\box77
+\c@tcbbreakpart=\count330
+\c@tcblayer=\count331
+\c@tcolorbox@number=\count332
+\l__tcobox_tmpa_box=\box78
 \l__tcobox_tmpa_dim=\dimen291
-\tcb@temp=\box78
 \tcb@temp=\box79
 \tcb@temp=\box80
 \tcb@temp=\box81
+\tcb@temp=\box82
 )
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/tools/tabularx.sty
 Package: tabularx 2023/12/11 v2.12a `tabularx' package (DPC)
@@ -638,19 +648,15 @@ Package: tabularx 2023/12/11 v2.12a `tabularx' package (DPC)
 \TX@old@col=\dimen294
 \TX@target=\dimen295
 \TX@delta=\dimen296
-\TX@cols=\count334
+\TX@cols=\count333
 \TX@ftn=\toks41
 )
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 52
-.
-
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/lm/t1lmr.fd
-File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/l3backend/l3backend-pdftex.d
-ef
-File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count335
+(/usr/local/texlive/2026basic/texmf-dist/tex/latex/l3backend/l3backend-xetex.de
+f
+File: l3backend-xetex.def 2025-10-09 L3 backend support: XeTeX
+\g__graphics_track_int=\count334
+\g__pdfannot_backend_int=\count335
+\g__pdfannot_backend_link_int=\count336
 ) (./documentation.aux)
 \openout1 = `documentation.aux'.
 
@@ -664,6 +670,8 @@ LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 52.
 LaTeX Font Info:    ... okay on input line 52.
 LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 52.
 LaTeX Font Info:    ... okay on input line 52.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 52.
+LaTeX Font Info:    ... okay on input line 52.
 LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 52.
 LaTeX Font Info:    ... okay on input line 52.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 52.
@@ -674,9 +682,9 @@ LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 52.
 LaTeX Font Info:    ... okay on input line 52.
 
 *geometry* driver: auto-detecting
-*geometry* detected driver: pdftex
+*geometry* detected driver: xetex
 *geometry* verbose mode - [ preamble ] result:
-* driver: pdftex
+* driver: xetex
 * paper: letterpaper
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
@@ -707,32 +715,8 @@ LaTeX Font Info:    ... okay on input line 52.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-(/usr/local/texlive/2026basic/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
-[Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count336
-\scratchdimen=\dimen297
-\scratchbox=\box82
-\nofMPsegments=\count337
-\nofMParguments=\count338
-\everyMPshowfont=\toks42
-\MPscratchCnt=\count339
-\MPscratchDim=\dimen298
-\MPnumerator=\count340
-\makeMPintoPDFobject=\count341
-\everyMPtoPDFconversion=\toks43
-)
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.s
-ty
-Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
-Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
-85.
-
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
-File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
-e
-))
 Package hyperref Info: Link coloring ON on input line 52.
- (./documentation.out) (./documentation.out)
+(./documentation.out) (./documentation.out)
 \@outlinefile=\write4
 \openout4 = `documentation.out'.
 
@@ -773,15 +757,8 @@ LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 6
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ) [1
 
-{/usr/local/texlive/2026basic/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/us
-r/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}] (./document
-ation.toc
-pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.21 ...line {4.5}Match \& Merge}{10}{section.4.5}
-                                                  % [1
+]
+(./documentation.toc [1
 
 ] [2]
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
@@ -792,101 +769,294 @@ LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
 
  [3]
 Chapter 1.
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 8
-7.
-(/usr/local/texlive/2026basic/texmf-dist/tex/latex/lm/ts1lmr.fd
-File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [4
+[4
 
-{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}] [5]
+] [5]
 Chapter 2.
 [6
 
 ] [7]
 Chapter 3.
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+[]|\T1/lmr/bx/n/10.95 What the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+[]|\T1/lmr/m/n/10.95 Their ex-ist-
+ []
+
+
+Underfull \hbox (badness 6575) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 ing uni-ver-sity
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 record ap-
+ []
+
+
+Underfull \hbox (badness 4660) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 pears on the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 dash-board
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+[]|\T1/lmr/m/n/10.95 Works im-me-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 di-ately, but
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 the link sits
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 in a flagged
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 lane of the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 match queue
+ []
+
+
+Underfull \hbox (badness 1946) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 eye-balls it ---
+ []
+
+
+Underfull \hbox (badness 5817) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 a name that
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 dis-agrees is
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+[]|\T1/lmr/m/n/10.95 ``We're ver-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 i-fy-ing your
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 record''; a
+ []
+
+
+Underfull \hbox (badness 1331) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 man-ager picks
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 di-date from
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 (ev-ery can-di-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 the match
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 queue of-fers
+ []
+
+
+Underfull \hbox (badness 2119) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 a search that
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 not just the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--256
+\T1/lmr/m/n/10.95 on-line slice
+ []
+
 [8
 
-] [9{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}]
- [10]
+]
+Overfull \vbox (32.63716pt too high) has occurred while \output is active []
+
+
+[9]
+Overfull \hbox (50.75235pt too wide) in paragraph at lines 302--309
+\T1/lmr/m/n/10.95 Once the Sales-force ap-pli-ca-tion ex-ists, the check-list \
+T1/lmr/m/it/10.95 is Sales-force's\T1/lmr/m/n/10.95 : ev-ery \T1/lmtt/m/n/10.95
+ TargetX_SRMb__Checklist_Item__c
+ []
+
+[10]
+Overfull \hbox (10.82776pt too wide) in paragraph at lines 351--354
+[]\T1/lmr/bx/n/10.95 approved \T1/lmr/m/n/10.95 --- set \T1/lmr/m/it/10.95 only
+ \T1/lmr/m/n/10.95 by the sync en-gine: once the SF check-list item shows re-ce
+ived/closed/waived,
+ []
+
+[11] [12]
 Chapter 4.
-[11
+[13
 
-] [12] [13] [14]
+] [14] [15] [16]
 Chapter 5.
-[15
 
-] [16] [17]
+Underfull \hbox (badness 4995) in paragraph at lines 582--582
+[]|\T1/lmr/m/n/10.95 Active sign-ins: who, when, from which
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 582--582
+[]|\T1/lmr/m/n/10.95 Every sync logged: trig-ger (sched-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 582--582
+\T1/lmr/m/n/10.95 ule/manual/boot), row counts, du-ra-tion,
+ []
+
+[17
+
+]
+Overfull \vbox (89.38107pt too high) has occurred while \output is active []
+
+
+[18]
+Overfull \hbox (23.51842pt too wide) in paragraph at lines 609--617
+\T1/lmr/m/n/10.95 u-ments to \T1/lmtt/m/n/10.95 approved \T1/lmr/m/n/10.95 once
+ their SF check-list item shows re-ceived. Then \T1/lmtt/m/n/10.95 portal_conta
+ct_projection
+ []
+
+[19] [20]
 Chapter 6.
 
-Overfull \hbox (62.09726pt too wide) in paragraph at lines 524--524
+Overfull \hbox (62.09726pt too wide) in paragraph at lines 642--642
 |\T1/lmr/bx/n/24.88 Cybersecurity, Ex-plained for Non-Engineers| 
  []
 
-[18
+[21
 
-] [19]
-Overfull \hbox (11.10095pt too wide) in paragraph at lines 623--626
+] [22]
+Overfull \hbox (11.10095pt too wide) in paragraph at lines 741--744
 []\T1/lmr/m/n/10.95 Cross-origin iso-la-tion head-ers (\T1/lmtt/m/n/10.95 Cross
 -Origin-Opener-Policy\T1/lmr/m/n/10.95 , \T1/lmtt/m/n/10.95 Cross-Origin-Resour
 ce-Policy\T1/lmr/m/n/10.95 )
  []
 
-[20]
-Overfull \hbox (12.49988pt too wide) in paragraph at lines 684--687
+[23]
+Overfull \hbox (12.49988pt too wide) in paragraph at lines 802--805
 []\T1/lmr/bx/n/10.95 Magic-byte in-spec-tion \T1/lmr/m/n/10.95 --- the first by
 tes of the file must ac-tu-ally be a real PDF/image/document
  []
 
-[21] [22]
+[24] [25]
 Chapter 7.
-[23
 
-] [24]
-Chapter 8.
-LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <24.88> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 780.
-
-Overfull \hbox (73.59364pt too wide) in paragraph at lines 780--780
-|\T1/lmr/bx/n/24.88 Deployment Plan for \T1/lmtt/b/n/24.88 tosmonline0001.ttu.e
-du| 
+Overfull \hbox (18.5619pt too wide) in paragraph at lines 865--869
+[]\T1/lmr/bx/n/10.95 Administrators \T1/lmr/m/n/10.95 re-view the au-dit trail 
+for anoma-lies, man-age staff ac-counts, glance at \T1/lmtt/m/n/10.95 /admin/sy
+nc
  []
 
-[25
 
-] [26]
+Underfull \hbox (badness 1748) in paragraph at lines 881--884
+[]\T1/lmr/m/n/10.95 Student signs up on their phone $\OMS/lmsy/m/n/10.95 !$ \T1
+/lmr/m/n/10.95 the matcher scores them against the clone
+ []
+
+[26
+
+] [27]
+Chapter 8.
+LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <24.88> not available
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 911.
+[28
+
+]
+Overfull \hbox (119.10005pt too wide) in paragraph at lines 966--970
+[]\T1/lmr/bx/n/10.95 Secrets: \T1/lmr/m/n/10.95 gen-er-ated server-side into \T
+1/lmtt/m/n/10.95 ~/ahportal/app/.env.local\T1/lmr/m/n/10.95 ; staff ac-counts (
+\T1/lmtt/m/n/10.95 admin@\T1/lmr/m/n/10.95 /\T1/lmtt/m/n/10.95 advisor@\T1/lmr/
+m/n/10.95 /\T1/lmtt/m/n/10.95 manager@ttu.edu\T1/lmr/m/n/10.95 )
+ []
+
+
+Overfull \hbox (19.41037pt too wide) in paragraph at lines 970--974
+\T1/lmr/m/n/10.95 men-tal on \T1/lmtt/m/n/10.95 SystemModstamp\T1/lmr/m/n/10.95
+ ) so \T1/lmtt/m/n/10.95 TargetX_SRMb__Checklist_Item__c \T1/lmr/m/n/10.95 land
+s in \T1/lmtt/m/n/10.95 AH.checklist_items
+ []
+
+
+Overfull \hbox (10.27544pt too wide) in paragraph at lines 977--980
+[]\T1/lmr/bx/n/10.95 Mount: \T1/lmr/m/n/10.95 ng-inx \T1/lmtt/m/n/10.95 locatio
+n /sim/AHPortal/ \T1/lmr/m/n/10.95 in \T1/lmtt/m/n/10.95 chatbot.conf $\OMS/lms
+y/m/n/10.95 !$ \T1/lmtt/m/n/10.95 127.0.0.1:3210 \T1/lmr/m/n/10.95 with forward
+ed-
+ []
+
+[29] [30]
 Chapter 9.
-[27
+[31
 
-] [28
+] [32
 
-] [29] (./documentation.aux)
+] [33] [34] (./documentation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-Package rerunfilecheck Info: File `documentation.out' has not changed.
-(rerunfilecheck)             Checksum: 1359DFE9BE27CD7336B49BB0927C3C8B;10314.
+
+
+Package rerunfilecheck Warning: File `documentation.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `documentation.out':
+(rerunfilecheck)             Before: 769024333C5B4CEA57DCE1D7D14AE3BD;10616
+(rerunfilecheck)             After:  5A220DEB8CE5536CDF0717A8393ECA6E;10849.
  ) 
 Here is how much of TeX's memory you used:
- 23486 strings out of 469006
- 452327 string characters out of 5454814
- 844503 words of memory out of 5000000
- 51685 multiletter control sequences out of 15000+600000
- 681384 words of font info for 69 fonts, out of 8000000 for 9000
+ 22882 strings out of 469709
+ 444148 string characters out of 5466024
+ 846429 words of memory out of 5000000
+ 51161 multiletter control sequences out of 15000+600000
+ 680683 words of font info for 69 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 98i,13n,108p,449b,618s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2026basic/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></u
-sr/local/texlive/2026basic/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></usr/lo
-cal/texlive/2026basic/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/te
-xlive/2026basic/texmf-dist/fonts/type1/public/lm/lmr12.pfb></usr/local/texlive/
-2026basic/texmf-dist/fonts/type1/public/lm/lmri10.pfb></usr/local/texlive/2026b
-asic/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></usr/local/texlive/2026basic/
-texmf-dist/fonts/type1/public/lm/lmtk10.pfb></usr/local/texlive/2026basic/texmf
--dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on documentation.pdf (30 pages, 267272 bytes).
-PDF statistics:
- 540 PDF objects out of 1000 (max. 8388607)
- 486 compressed objects within 5 object streams
- 129 named destinations out of 1000 (max. 500000)
- 469 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 98i,13n,108p,458b,598s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
+Output written on documentation.pdf (35 pages).

@@ -19,8 +19,11 @@ function makePool(url: string | undefined, schema: string): Pool {
     connectionTimeoutMillis: 5_000,
     // queries can't run longer than 15s — kills runaway statements
     options: `-c search_path="${schema}",public -c statement_timeout=15000`,
-    // prod: TLS to Postgres. PGSSLMODE=require|verify-full can also go in the URL.
-    ...(IS_PROD && { ssl: { rejectUnauthorized: process.env.PGSSLMODE !== "require" } }),
+    // prod: TLS to Postgres unless PGSSLMODE=disable (localhost socket on the
+    // deploy box doesn't speak SSL). PGSSLMODE=require keeps TLS but skips CA verify.
+    ...(IS_PROD && process.env.PGSSLMODE !== "disable"
+      ? { ssl: { rejectUnauthorized: process.env.PGSSLMODE !== "require" } }
+      : {}),
   });
   pool.on("error", (e) => console.error("[pg] idle client error:", e.message));
   return pool;

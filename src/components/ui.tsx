@@ -73,7 +73,7 @@ export function statusTone(s?: string | null): keyof typeof pillStyles {
       return "ok";
     case "denied": case "rejected": case "withdrawn": case "disabled":
       return "danger";
-    case "pending_review": case "needs review": case "in review": case "in_review": case "pending": case "in progress": case "in_progress": case "auto_partial": case "incomplete": case "uploaded":
+    case "pending_review": case "needs review": case "in review": case "in_review": case "pending": case "in progress": case "in_progress": case "auto_partial": case "incomplete": case "uploaded": case "pushed":
       return "warn";
     default:
       return "mute";

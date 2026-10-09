@@ -47,4 +47,5 @@ export const IconWarn = I(<><path d="M12 4 2.5 20h19z" /><path d="M12 10v4" /><c
 export const IconPlus = I(<path d="M12 5v14M5 12h14" />);
 export const IconEdit = I(<><path d="m14.5 5.5 4 4L8 20H4v-4z" /><path d="m13 7 4 4" /></>);
 export const IconLock = I(<><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>);
+export const IconSync = I(<><path d="M20 12a8 8 0 0 0-14.2-4.9M4 12a8 8 0 0 0 14.2 4.9" /><path d="M18.5 2.5v4.7h-4.7M5.5 21.5v-4.7h4.7" /></>);
 export const IconSpark = I(<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" />);
