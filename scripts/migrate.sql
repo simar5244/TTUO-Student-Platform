@@ -527,6 +527,8 @@ ALTER TABLE portal_contact_projection ADD COLUMN IF NOT EXISTS sf_app_submitted_
 ALTER TABLE portal_contact_projection ADD COLUMN IF NOT EXISTS sf_status_change_at timestamptz;
 ALTER TABLE portal_contact_projection ADD COLUMN IF NOT EXISTS docs_pending int NOT NULL DEFAULT 0;
 
+ALTER TABLE portal_users ADD COLUMN IF NOT EXISTS terms_accepted_at timestamptz;
+
 DROP VIEW IF EXISTS sf_contact_portal;
 CREATE VIEW sf_contact_portal AS
 SELECT c.*, p.portal_user_id, p.link_status AS portal_link_status,
@@ -539,3 +541,18 @@ SELECT c.*, p.portal_user_id, p.link_status AS portal_link_status,
        p.sf_open_items, p.sf_pct, p.sf_app_submitted_at, p.sf_status_change_at,
        p.docs_pending
 FROM sf_contact c LEFT JOIN portal_contact_projection p ON p.sf_contact_id = c.id;
+
+-- Item reminders: a student commits to a date for one open requirement;
+-- the sync loop's tick sends an SMS that day (implementation-intention nudge).
+CREATE TABLE IF NOT EXISTS portal_reminders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES portal_users(id) ON DELETE CASCADE,
+  item_ref text NOT NULL,               -- sf checklist item id or local item id
+  label text NOT NULL,
+  send_on date NOT NULL,
+  sent_at timestamptz,
+  canceled_at timestamptz,
+  result text,                          -- sent | no_phone | no_twilio | error
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS portal_reminders_due ON portal_reminders (send_on) WHERE sent_at IS NULL AND canceled_at IS NULL;

@@ -13,7 +13,8 @@ export default function AdminChat() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const lastId = useRef(0);
-  const bottom = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const firstLoad = useRef(true);
 
   const loadThreads = () => fetch("/api/admin/chat").then((r) => r.json()).then((d) => setThreads(d.threads ?? []));
 
@@ -29,8 +30,14 @@ export default function AdminChat() {
   }
 
   useEffect(() => { loadThreads(); const t = setInterval(loadThreads, 5000); return () => clearInterval(t); }, []);
-  useEffect(() => { setMsgs([]); lastId.current = 0; if (open) poll(); const t = setInterval(poll, 2500); return () => clearInterval(t); }, [open?.id]);
-  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
+  useEffect(() => { setMsgs([]); lastId.current = 0; firstLoad.current = true; if (open) poll(); const t = setInterval(poll, 2500); return () => clearInterval(t); }, [open?.id]);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    // jump straight to the latest on first load; only animate for live updates
+    el.scrollTo({ top: el.scrollHeight, behavior: firstLoad.current ? "instant" : "smooth" });
+    firstLoad.current = false;
+  }, [msgs.length]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +54,7 @@ export default function AdminChat() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Live chat" sub="Student conversations — claim a thread to take over from the bot" />
+      <PageHeader title="Tickets" sub="Student conversations — claim a thread to take over from the bot" />
 
       <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
         {/* thread list */}
@@ -83,7 +90,7 @@ export default function AdminChat() {
                   <Button variant="ghost" className="px-3 py-1.5 text-xs text-accent" onClick={() => op("close")}>Close</Button>
                 </div>
               </div>
-              <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              <div ref={box} className="flex-1 space-y-3 overflow-y-auto p-4">
                 {msgs.map((m) => (
                   <div key={m.id} className={`flex ${m.sender_kind === "admin" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] rounded-lg px-3.5 py-2.5 text-sm ${
@@ -95,7 +102,6 @@ export default function AdminChat() {
                     </div>
                   </div>
                 ))}
-                <div ref={bottom} />
               </div>
               <form onSubmit={send} className="flex gap-2 border-t border-line p-3">
                 <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Reply as advisor…"

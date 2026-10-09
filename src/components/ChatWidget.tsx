@@ -20,7 +20,7 @@ export function ChatWidget() {
           <div className="border-b border-line px-4 py-3">
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={asset("/mascot/encourage.png")} alt="Raider Red" className="h-9 w-9 rounded-full border border-line bg-smoke object-cover object-top" />
+              <img src={asset("/mascot/encourage.png")} alt="Raider Red" style={{ mixBlendMode: "multiply" }} className="h-9 w-9 rounded-full border border-line bg-smoke object-cover object-top" />
               <div>
                 <div className="text-sm font-semibold">Questions?</div>
                 <div className="text-xs text-mute">Chat with Raider Red or an advisor</div>

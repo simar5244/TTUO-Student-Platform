@@ -29,7 +29,7 @@ export default function ApplyPage() {
   const poll = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function loadMe() {
-    const d = await fetch("/api/me").then((r) => r.json());
+    const d = await fetch("/api/me", { cache: "no-store" }).then((r) => r.json());
     setLinked(!!d.link?.sf_contact_id);
     if (d.portalApplication) {
       setApp(d.portalApplication);
@@ -38,7 +38,7 @@ export default function ApplyPage() {
     }
   }
   useEffect(() => {
-    fetch("/api/meta").then((r) => r.json()).then(setMeta);
+    fetch("/api/meta", { cache: "no-store" }).then((r) => r.json()).then(setMeta);
     loadMe();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -58,9 +58,7 @@ export default function ApplyPage() {
         loadMe();
         if (poll.current) { clearInterval(poll.current); poll.current = null; }
       } else if (!quiet) {
-        setMsg(d.reason === "not_linked"
-          ? "We haven't matched your Salesforce record yet — an advisor will link it, or check again shortly."
-          : "Not seeing it yet — Salesforce can take a few minutes. Try again in a bit.");
+        setMsg("Not seeing it yet — Salesforce can take a few minutes. Try again in a bit.");
       }
     } finally { setChecking(false); }
   }
@@ -140,7 +138,7 @@ export default function ApplyPage() {
 
       {linked === false && !waiting && !submitted && (
         <Card className="p-5 text-sm text-mute">
-          Applied before? We're still matching your record — an advisor will link your account, then your application will appear here automatically.
+          Applied before? If your application doesn't show up here within a day, message an advisor and we'll get it attached to your account.
         </Card>
       )}
 

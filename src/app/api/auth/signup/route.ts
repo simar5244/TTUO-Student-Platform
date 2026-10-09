@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
   const pwErr = passwordIssue(password, email);
   if (pwErr) return bad(pwErr);
   if (!phone || normalizePhone(phone).length < 10) return bad("Valid 10-digit phone required");
+  if (body.agreed !== true) return bad("You must agree to the Terms & Conditions to create an account");
 
   const exists = await q(`SELECT 1 FROM ${ah("portal_users")} WHERE lower(email)=lower($1)`, [email]);
   if (exists.rowCount) return bad("An account with this email already exists", 409);
@@ -25,8 +26,8 @@ export async function POST(req: NextRequest) {
   const { ip, ua } = clientInfo(req);
   const hash = await hashPassword(password);
   const { rows } = await q<{ id: string }>(
-    `INSERT INTO ${ah("portal_users")} (email, phone, password_hash, display_name, role)
-     VALUES (lower($1), $2, $3, $4, 'student') RETURNING id`,
+    `INSERT INTO ${ah("portal_users")} (email, phone, password_hash, display_name, role, terms_accepted_at)
+     VALUES (lower($1), $2, $3, $4, 'student', now()) RETURNING id`,
     [email, normalizePhone(phone), hash, name || null]
   );
   const userId = rows[0].id;

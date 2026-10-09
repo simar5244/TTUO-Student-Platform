@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-dvh bg-smoke/40 lg:grid lg:grid-cols-[230px_1fr]">
-      <AdminNav role={user.role} name={user.display_name || user.email} />
+      <AdminNav role={user.role} />
       <main className="min-w-0 px-4 pb-24 pt-6 sm:px-6 lg:pb-10">{children}</main>
     </div>
   );

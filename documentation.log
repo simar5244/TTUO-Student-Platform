@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.1)  9 OCT 2026 12:50
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.3.1)  9 OCT 2026 14:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -762,7 +762,7 @@ File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 
 ] [2]
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 50.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 53.
 )
 \tf@toc=\write5
 \openout5 = `documentation.toc'.
@@ -920,94 +920,94 @@ T1/lmr/m/it/10.95 is Sales-force's\T1/lmr/m/n/10.95 : ev-ery \T1/lmtt/m/n/10.95
  TargetX_SRMb__Checklist_Item__c
  []
 
-[10]
-Overfull \hbox (10.82776pt too wide) in paragraph at lines 351--354
+[10] [11] [12]
+Overfull \hbox (10.82776pt too wide) in paragraph at lines 416--419
 []\T1/lmr/bx/n/10.95 approved \T1/lmr/m/n/10.95 --- set \T1/lmr/m/it/10.95 only
  \T1/lmr/m/n/10.95 by the sync en-gine: once the SF check-list item shows re-ce
 ived/closed/waived,
  []
 
-[11] [12]
+[13]
 Chapter 4.
-[13
+[14
 
-] [14] [15] [16]
+] [15] [16] [17]
 Chapter 5.
 
-Underfull \hbox (badness 4995) in paragraph at lines 582--582
+Underfull \hbox (badness 4995) in paragraph at lines 647--647
 []|\T1/lmr/m/n/10.95 Active sign-ins: who, when, from which
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 582--582
+Underfull \hbox (badness 10000) in paragraph at lines 647--647
 []|\T1/lmr/m/n/10.95 Every sync logged: trig-ger (sched-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 582--582
+Underfull \hbox (badness 10000) in paragraph at lines 647--647
 \T1/lmr/m/n/10.95 ule/manual/boot), row counts, du-ra-tion,
  []
 
-[17
+[18
 
 ]
 Overfull \vbox (89.38107pt too high) has occurred while \output is active []
 
 
-[18]
-Overfull \hbox (23.51842pt too wide) in paragraph at lines 609--617
+[19]
+Overfull \hbox (23.51842pt too wide) in paragraph at lines 674--682
 \T1/lmr/m/n/10.95 u-ments to \T1/lmtt/m/n/10.95 approved \T1/lmr/m/n/10.95 once
  their SF check-list item shows re-ceived. Then \T1/lmtt/m/n/10.95 portal_conta
 ct_projection
  []
 
-[19] [20]
+[20] [21]
 Chapter 6.
 
-Overfull \hbox (62.09726pt too wide) in paragraph at lines 642--642
+Overfull \hbox (62.09726pt too wide) in paragraph at lines 707--707
 |\T1/lmr/bx/n/24.88 Cybersecurity, Ex-plained for Non-Engineers| 
  []
 
-[21
+[22
 
-] [22]
-Overfull \hbox (11.10095pt too wide) in paragraph at lines 741--744
+] [23]
+Overfull \hbox (11.10095pt too wide) in paragraph at lines 806--809
 []\T1/lmr/m/n/10.95 Cross-origin iso-la-tion head-ers (\T1/lmtt/m/n/10.95 Cross
 -Origin-Opener-Policy\T1/lmr/m/n/10.95 , \T1/lmtt/m/n/10.95 Cross-Origin-Resour
 ce-Policy\T1/lmr/m/n/10.95 )
  []
 
-[23]
-Overfull \hbox (12.49988pt too wide) in paragraph at lines 802--805
+[24]
+Overfull \hbox (12.49988pt too wide) in paragraph at lines 867--870
 []\T1/lmr/bx/n/10.95 Magic-byte in-spec-tion \T1/lmr/m/n/10.95 --- the first by
 tes of the file must ac-tu-ally be a real PDF/image/document
  []
 
-[24] [25]
+[25] [26]
 Chapter 7.
 
-Overfull \hbox (18.5619pt too wide) in paragraph at lines 865--869
+Overfull \hbox (18.5619pt too wide) in paragraph at lines 930--934
 []\T1/lmr/bx/n/10.95 Administrators \T1/lmr/m/n/10.95 re-view the au-dit trail 
 for anoma-lies, man-age staff ac-counts, glance at \T1/lmtt/m/n/10.95 /admin/sy
 nc
  []
 
 
-Underfull \hbox (badness 1748) in paragraph at lines 881--884
+Underfull \hbox (badness 1748) in paragraph at lines 946--949
 []\T1/lmr/m/n/10.95 Student signs up on their phone $\OMS/lmsy/m/n/10.95 !$ \T1
 /lmr/m/n/10.95 the matcher scores them against the clone
  []
 
-[26
+[27
 
-] [27]
+] [28]
 Chapter 8.
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <24.88> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 911.
-[28
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 976.
+[29
 
 ]
-Overfull \hbox (119.10005pt too wide) in paragraph at lines 966--970
+Overfull \hbox (119.10005pt too wide) in paragraph at lines 1031--1035
 []\T1/lmr/bx/n/10.95 Secrets: \T1/lmr/m/n/10.95 gen-er-ated server-side into \T
 1/lmtt/m/n/10.95 ~/ahportal/app/.env.local\T1/lmr/m/n/10.95 ; staff ac-counts (
 \T1/lmtt/m/n/10.95 admin@\T1/lmr/m/n/10.95 /\T1/lmtt/m/n/10.95 advisor@\T1/lmr/
@@ -1015,48 +1015,41 @@ m/n/10.95 /\T1/lmtt/m/n/10.95 manager@ttu.edu\T1/lmr/m/n/10.95 )
  []
 
 
-Overfull \hbox (19.41037pt too wide) in paragraph at lines 970--974
+Overfull \hbox (19.41037pt too wide) in paragraph at lines 1035--1039
 \T1/lmr/m/n/10.95 men-tal on \T1/lmtt/m/n/10.95 SystemModstamp\T1/lmr/m/n/10.95
  ) so \T1/lmtt/m/n/10.95 TargetX_SRMb__Checklist_Item__c \T1/lmr/m/n/10.95 land
 s in \T1/lmtt/m/n/10.95 AH.checklist_items
  []
 
 
-Overfull \hbox (10.27544pt too wide) in paragraph at lines 977--980
+Overfull \hbox (10.27544pt too wide) in paragraph at lines 1042--1045
 []\T1/lmr/bx/n/10.95 Mount: \T1/lmr/m/n/10.95 ng-inx \T1/lmtt/m/n/10.95 locatio
 n /sim/AHPortal/ \T1/lmr/m/n/10.95 in \T1/lmtt/m/n/10.95 chatbot.conf $\OMS/lms
 y/m/n/10.95 !$ \T1/lmtt/m/n/10.95 127.0.0.1:3210 \T1/lmr/m/n/10.95 with forward
 ed-
  []
 
-[29] [30]
+[30] [31]
 Chapter 9.
-[31
+[32
 
-] [32
+] [33
 
-] [33] [34] (./documentation.aux)
+] [34] [35] (./documentation.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-Package rerunfilecheck Warning: File `documentation.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `documentation.out':
-(rerunfilecheck)             Before: 769024333C5B4CEA57DCE1D7D14AE3BD;10616
-(rerunfilecheck)             After:  5A220DEB8CE5536CDF0717A8393ECA6E;10849.
+Package rerunfilecheck Info: File `documentation.out' has not changed.
+(rerunfilecheck)             Checksum: 1ABDADD626B9A68788F855D0BBF5CB8D;11680.
  ) 
 Here is how much of TeX's memory you used:
- 22882 strings out of 469709
- 444148 string characters out of 5466024
- 846429 words of memory out of 5000000
- 51161 multiletter control sequences out of 15000+600000
+ 22886 strings out of 469709
+ 444214 string characters out of 5466024
+ 847536 words of memory out of 5000000
+ 51165 multiletter control sequences out of 15000+600000
  680683 words of font info for 69 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  98i,13n,108p,458b,598s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on documentation.pdf (35 pages).
+Output written on documentation.pdf (36 pages).

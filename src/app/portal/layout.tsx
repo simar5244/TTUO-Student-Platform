@@ -9,7 +9,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-dvh bg-paper">
-      <PortalNav name={user.display_name || user.email} />
+      <PortalNav name={user.display_name || user.email} applyEnabled={process.env.APPLY_ENABLED === "true"} />
       <main className="mx-auto max-w-3xl px-4 pb-28 pt-6 sm:pb-16 lg:max-w-4xl">
         {children}
       </main>

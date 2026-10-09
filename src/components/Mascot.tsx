@@ -15,6 +15,9 @@ export function Mascot({ state, className }: { state: MascotState; className?: s
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={SRC[state]}
+      // PNGs carry a baked white background; multiply blends it into whatever
+      // light surface (white / smoke) the mascot sits on.
+      style={{ mixBlendMode: "multiply" }}
       alt={state === "sad" ? "Raider Red waiting" : state === "celebrate" ? "Raider Red celebrating" : "Raider Red cheering you on"}
       className={`object-contain ${className ?? ""}`}
     />
@@ -73,7 +76,7 @@ export function MascotCard({ state, title, sub, action }: {
         <div className="p-5 sm:p-7">
           <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">{title}</h2>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-mute">{sub}</p>
-          {action && <div className="mt-4 flex gap-2">{action}</div>}
+          {action && <div className="mt-4 flex flex-col gap-2 sm:flex-row">{action}</div>}
         </div>
       </div>
     </div>

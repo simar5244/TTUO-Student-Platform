@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader, Card, Field, Input, Button, Pill, Spinner } from "@/components/ui";
 import { IconShield } from "@/components/icons";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [me, setMe] = useState<Record<string, any> | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pwCur, setPwCur] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwMsg, setPwMsg] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [msg, setMsg] = useState("");
@@ -13,7 +19,7 @@ export default function ProfilePage() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const load = () => fetch("/api/me").then((r) => r.json()).then((d) => {
+  const load = () => fetch("/api/me", { cache: "no-store" }).then((r) => r.json()).then((d) => {
     setMe(d); setName(d.user.name || ""); setPhone(d.user.phone || "");
   });
   useEffect(() => { load(); }, []);
@@ -41,8 +47,25 @@ export default function ProfilePage() {
     load();
   }
 
+  async function changePassword() {
+    setBusy(true); setPwMsg("");
+    const r = await fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "change_password", current: pwCur, next: pwNew }) });
+    const d = await r.json().catch(() => null);
+    setBusy(false);
+    setPwMsg(r.ok ? "Password updated." : d?.error || "Couldn't update — try again.");
+    if (r.ok) { setPwCur(""); setPwNew(""); }
+  }
+
+  async function deleteAccount() {
+    setBusy(true);
+    const r = await fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "delete_account", confirm: true }) });
+    setBusy(false);
+    if (r.ok) { router.push("/signup"); router.refresh(); }
+    else setMsg("Couldn't delete your account — try again or message an advisor.");
+  }
+
   if (!me) return null;
-  const linked = me.link?.sf_contact_id;
 
   return (
     <div className="space-y-5">
@@ -82,19 +105,34 @@ export default function ProfilePage() {
         )}
       </Card>
 
+      <Card className="space-y-4 p-5">
+        <div className="text-xs font-semibold uppercase tracking-wide text-mute">Change password</div>
+        <Field label="Current password"><Input type="password" autoComplete="current-password" value={pwCur} onChange={(e) => setPwCur(e.target.value)} /></Field>
+        <Field label="New password"><Input type="password" autoComplete="new-password" value={pwNew} onChange={(e) => setPwNew(e.target.value)} /></Field>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={changePassword} disabled={busy || !pwCur || !pwNew}>{busy ? <Spinner /> : "Update password"}</Button>
+          {pwMsg && <span className="text-sm text-mute">{pwMsg}</span>}
+        </div>
+      </Card>
+
       <Card className="p-5">
-        <div className="text-xs font-semibold uppercase tracking-wide text-mute">University record</div>
-        {linked ? (
-          <div className="mt-2 space-y-1 text-sm">
-            <div className="flex justify-between"><span className="text-mute">Name on file</span><span className="font-medium">{me.contact?.Name}</span></div>
-            <div className="flex justify-between"><span className="text-mute">Status</span><span>{me.contact?.status || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-mute">Link status</span>
-              <Pill tone={me.link.status === "pending_review" ? "warn" : "ok"}>{me.link.status.replace(/_/g, " ")}</Pill></div>
-            <div className="flex justify-between"><span className="text-mute">Matched on</span>
-              <span className="text-xs">{Object.keys(me.link.match_fields || {}).filter((k) => me.link.match_fields[k]).join(" + ") || "—"}</span></div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-mute">Account</div>
+        {!confirmDelete ? (
+          <div className="mt-3">
+            <Button variant="outline" className="border-accent text-accent hover:bg-accent/5" onClick={() => setConfirmDelete(true)}>
+              Delete my account
+            </Button>
           </div>
         ) : (
-          <p className="mt-2 text-sm text-mute">No university record linked yet. If you previously submitted an RFI with a different email/phone, an advisor can link it manually.</p>
+          <div className="mt-3 space-y-3">
+            <p className="text-sm">Permanently delete your portal account and uploaded documents? This can't be undone — it does not affect your official Texas Tech record.</p>
+            <div className="flex gap-2">
+              <Button variant="danger" className="px-3 py-1.5 text-xs" disabled={busy} onClick={deleteAccount}>
+                {busy ? <Spinner /> : "Yes, delete everything"}
+              </Button>
+              <Button variant="ghost" className="px-3 py-1.5 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+            </div>
+          </div>
         )}
       </Card>
     </div>

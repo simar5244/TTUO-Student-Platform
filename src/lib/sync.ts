@@ -366,8 +366,8 @@ async function confirmPushedDocs(client: PoolClient) {
      SET status='approved', sf_confirmed_at=now()
      FROM ${ah("sf_checklist_item")} i
      WHERE i.id = d.sf_item_id AND d.status='pushed'
-       AND (i.is_closed OR i.waived OR i.status ~* 'received|complete|approved|waived'
-            OR NULLIF(i.item_received,'') IS NOT NULL)`
+       AND (i.is_closed OR i.waived OR i.status ~* '^(completed|received|approved|waived|satisfied|complete)'
+            OR i.item_received ~* '^(received|waived|yes|complete)')`
   );
   return res.rowCount ?? 0;
 }
@@ -443,8 +443,8 @@ export async function rebuildProjections(client?: PoolClient | null, contactId?:
      ) sa ON true
      LEFT JOIN LATERAL (
        SELECT count(*) FILTER (WHERE i.is_closed OR i.waived OR i.not_required
-                OR i.status ~* 'received|complete|approved|waived|satisfied'
-                OR NULLIF(i.item_received,'') IS NOT NULL)::int AS done,
+                OR i.status ~* '^(completed|received|approved|waived|satisfied|complete)'
+                OR i.item_received ~* '^(received|waived|yes|complete)')::int AS done,
               count(*)::int AS total
        FROM ${ah("sf_checklist_item")} i
        WHERE i.application_id = sa.id
@@ -516,6 +516,9 @@ export interface SyncResult {
 export async function runSync(trigger: SyncTrigger, actorId?: string): Promise<SyncResult> {
   const client = await appPool().connect();
   try {
+    // pool default is 15s — bulk clone steps need longer (esp. through the
+    // 0001->0003 SSH tunnel); reset before releasing back to the pool
+    await client.query("SET statement_timeout = '180s'");
     const { rows } = await client.query("SELECT pg_try_advisory_lock($1) AS ok", [LOCK_KEY]);
     if (!rows[0].ok) return { skipped: "a sync run is already in progress" };
 
@@ -567,6 +570,7 @@ export async function runSync(trigger: SyncTrigger, actorId?: string): Promise<S
     return { runId, stats };
   } finally {
     await client.query("SELECT pg_advisory_unlock($1)", [LOCK_KEY]).catch(() => {});
+    await client.query("SET statement_timeout = '15s'").catch(() => {});
     client.release();
   }
 }
@@ -600,6 +604,8 @@ export function startSyncLoop() {
       if (res.error) console.error("[sync] boot run failed:", res.error);
       else console.log("[sync] boot run complete:", JSON.stringify(res.stats));
     }
+    const { sendDueReminders } = await import("./reminders");
+    await sendDueReminders().catch((e) => console.warn("[reminders] sweep failed:", e?.message ?? e));
   })().catch((e) =>
     console.warn("[sync] skipped — clone tables missing? run scripts/migrate.sql (", e.message, ")")
   );
@@ -609,8 +615,10 @@ export function startSyncLoop() {
     return;
   }
   const timer = setInterval(() => {
-    runSync("schedule").then((r) => {
+    runSync("schedule").then(async (r) => {
       if (r.error) console.error("[sync] scheduled run failed:", r.error);
+      const { sendDueReminders } = await import("./reminders");
+      await sendDueReminders().catch((e) => console.warn("[reminders] sweep failed:", e?.message ?? e));
     }).catch((e) => console.error("[sync] scheduled run crashed:", e?.message ?? e));
   }, mins * 60_000);
   timer.unref();

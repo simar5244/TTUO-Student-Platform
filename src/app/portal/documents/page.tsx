@@ -28,10 +28,10 @@ function Documents() {
   const [err, setErr] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const load = () => fetch("/api/documents").then((r) => r.json()).then((d) => setDocs(d.documents ?? []));
+  const load = () => fetch("/api/documents", { cache: "no-store" }).then((r) => r.json()).then((d) => setDocs(d.documents ?? []));
   useEffect(() => {
     load();
-    fetch("/api/checklist").then((r) => r.json())
+    fetch("/api/checklist", { cache: "no-store" }).then((r) => r.json())
       .then((d) => setItems((d.items ?? []).filter((i: Item) => !["approved", "waived"].includes(i.status))));
   }, []);
 
@@ -39,20 +39,30 @@ function Documents() {
     const file = e.target.files?.[0];
     if (!file) return;
     setBusy(true); setErr("");
-    const fd = new FormData();
-    fd.append("file", file);
-    if (sel.startsWith("local:")) fd.append("item", sel.slice(6));
-    else if (sel.startsWith("sf:")) {
-      const [, id, req] = sel.split(":");
-      fd.append("sf_item", id);
-      if (req) fd.append("req_key", req);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (sel.startsWith("local:")) fd.append("item", sel.slice(6));
+      else if (sel.startsWith("sf:")) {
+        const [, id, req] = sel.split(":");
+        fd.append("sf_item", id);
+        if (req) fd.append("req_key", req);
+      }
+      const r = await fetch("/api/documents", { method: "POST", body: fd });
+      // nginx/proxy errors come back as HTML, not JSON — don't let that throw
+      const d = await r.json().catch(() => ({} as { error?: string }));
+      if (!r.ok) {
+        setErr(d.error || (r.status === 413 ? "File too large — keep it under 15MB" : `Upload failed (${r.status})`));
+        return;
+      }
+      if (fileRef.current) fileRef.current.value = "";
+      load();
+    } catch {
+      setErr("Upload failed — check your connection and try again");
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
-    const r = await fetch("/api/documents", { method: "POST", body: fd });
-    const d = await r.json();
-    setBusy(false);
-    if (!r.ok) return setErr(d.error || "Upload failed");
-    if (fileRef.current) fileRef.current.value = "";
-    load();
   }
 
   const fmt = (n: number) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`);

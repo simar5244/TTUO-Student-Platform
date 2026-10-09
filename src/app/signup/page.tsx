@@ -9,40 +9,28 @@ import { Button, Field, Input, Spinner } from "@/components/ui";
 export default function SignupPage() {
   const router = useRouter();
   const [f, setF] = useState({ name: "", email: "", phone: "", password: "" });
+  const [agree, setAgree] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [matched, setMatched] = useState<null | { matched: boolean; type?: string }>(null);
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value });
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!agree) return setErr("Please agree to the Terms & Conditions to create your account.");
     setBusy(true); setErr("");
     const r = await fetch("/api/auth/signup", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f),
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...f, agreed: true }),
     });
     const d = await r.json();
     setBusy(false);
     if (!r.ok) return setErr(d.error || "Signup failed");
-    if (d.match?.matched) setMatched(d.match);
-    else { router.push("/portal"); router.refresh(); }
-  }
-
-  if (matched) {
-    return (
-      <AuthShell title="We found your record">
-        <div className="rounded-lg border border-line p-5 text-sm leading-relaxed">
-          {matched.type === "auto_full"
-            ? "Your email and phone match a record we already have — we've linked it to your account automatically."
-            : "We found a record that partially matches you. An advisor will verify the link shortly."}
-        </div>
-        <Button className="mt-5 w-full" onClick={() => { router.push("/portal"); router.refresh(); }}>Continue to portal</Button>
-      </AuthShell>
-    );
+    router.push("/portal"); router.refresh();
   }
 
   return (
-    <AuthShell title="Create your account" sub="Use the same email and phone you gave us — we'll link your records automatically."
+    <AuthShell title="Create your account" sub="One account to apply, upload documents, and track your application."
       footer={<>Already have an account? <Link href="/login" className="font-medium text-ink underline underline-offset-4">Sign in</Link></>}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="Full name"><Input required value={f.name} onChange={set("name")} autoComplete="name" /></Field>
@@ -53,11 +41,21 @@ export default function SignupPage() {
         <Field label="Password" hint="At least 8 characters">
           <Input type="password" required minLength={8} value={f.password} onChange={set("password")} autoComplete="new-password" />
         </Field>
+
+        <label className="flex items-start gap-2.5 rounded-lg border border-line p-3 text-xs leading-relaxed text-mute">
+          <input type="checkbox" className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#111]"
+            checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+          <span>
+            By creating an account I agree to the{" "}
+            <Link href="/terms" className="font-medium text-ink underline underline-offset-2" target="_blank">
+              Terms &amp; Conditions and Privacy Notice
+            </Link>
+            , and consent to receive SMS verification codes (msg &amp; data rates may apply).
+          </span>
+        </label>
+
         {err && <p className="text-sm text-accent">{err}</p>}
         <Button className="w-full" disabled={busy}>{busy ? <Spinner /> : "Create account"}</Button>
-        <p className="text-xs leading-relaxed text-mute">
-          By creating an account you agree to receive SMS messages related to your application. Msg & data rates may apply.
-        </p>
       </form>
     </AuthShell>
   );

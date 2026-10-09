@@ -15,6 +15,8 @@ html { -webkit-tap-highlight-color: transparent; }
 body {
   @apply bg-paper text-ink antialiased;
   font-feature-settings: "cv11", "ss01";
+  /* any stray wide child must not widen the layout viewport (mobile wiggle) */
+  overflow-x: clip;
 }
 
 ::selection { background: #0a0a0a; color: #fff; }

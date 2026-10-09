@@ -92,7 +92,7 @@ export default function DocumentsAdmin() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Document queue"
+      <PageHeader title="Document Linking"
         sub="Student uploads. Download each file, attach it in RaiderConnect, then mark it pushed — the sync confirms it as received on the next pass." />
 
       <section>

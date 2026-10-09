@@ -105,7 +105,54 @@ terms, programs). Reload: `psql -d april_app -h localhost -p 5433 -U postgres -f
 - on 0003 only the data side remains: `AHPortalDB`, `ahportal` role, Lumen connector
   `3e0ca7b6` (SF Checklist Items → `AH.checklist_items`).
 
+## Behavior notes (Oct 2026)
+- **Matching**: name fields also compare as tokens of the SF `Name` column —
+  SF stores some leads reversed ("Last First") or single-field, so exact
+  FirstName/LastName compares alone miss real people (`scoreFields` in sf.ts).
+- **Checklist "done"**: SF `item_received`/`status` values include
+  `Not Received`/`Not Started` — `CHECKLIST_DONE` in sf.ts (mirrored inline in
+  sync.ts projection + `confirmPushedDocs`) uses anchored regexes; an
+  unanchored match counts "Not Received" as received.
+- **Merged checklist**: `studentChecklist` in `src/lib/checklist.ts` is THE
+  student checklist — SF items first, portal uploads overlaid, local
+  `portal_checklist_items` fallback. `/api/checklist`, `/api/me`, and
+  `/portal` all read it; never recompute locally.
+- **Student UX is link-blind**: portal pages never mention matching/linking.
+  `portal_identity_links`/`match_fields` stay staff-only (admin/match).
+- **Terms gate**: signup requires `agreed:true` → `portal_users.terms_accepted_at`.
+  Public `/terms` page; it is a third-party app disclaimer (not official TTU).
+- **Apply gating**: `APPLY_ENABLED=true` re-enables `/portal/apply` +
+  `POST /api/applications intent`. Default off — nav item and mascot CTA hide.
+- **Match admin**: `/admin/match` groups candidates by matched-field signature
+  (email → +phone → +first → +last); `?preview=<sfContactId>` renders the
+  modal; `?browse=<term>` searches the whole warehouse (outside the clone);
+  `ensureCloned` pulls a browsed contact in before linking.
+- **Endowed progress**: `metaItems` in `src/lib/checklist.ts` prepends real
+  completed milestones (account created, application submitted) to every
+  checklist response — a fresh signup reads "1 of 2", never 0. Meta ids are
+  `meta-*`, carry no upload affordance, and never count SF work as done.
+- **Item reminders**: bell on an open checklist item → date pick → one SMS
+  that morning (implementation intention). `portal_reminders` table; the sync
+  loop's tick calls `sendDueReminders` (src/lib/reminders.ts) after each run
+  and at boot. Sends via Twilio **Messages** API (Verify can't send free
+  text): needs `TWILIO_FROM` (E.164) or `TWILIO_MESSAGING_SID` plus the
+  existing SID/TOKEN; `PORTAL_BASE_URL` adds the deep link. Without them the
+  reminder is recorded `no_twilio` — degrades silently, never blocks.
+  Server enforces consent (`confirm_sms`), a real phone on file, ≤90 days.
+- **Password change**: `POST /api/profile {action:"change_password",
+  current, next}` — verifies current via `checkPassword`, applies
+  `passwordIssue` policy, rehashes with `hashPassword`, audits.
+- **Client fetches** use `cache:"no-store"` — Safari's bfcache otherwise
+  shows stale portal shells on mobile.
+- **Account deletion**: Profile → "Delete my account" → `POST /api/profile
+  {action:"delete_account", confirm:true}`. Uploads are unlinked from disk,
+  then `portal_users` DELETE cascades everything user-owned (incl.
+  reminders); `portal_activity`/`portal_notes` retain anonymized rows via
+  SET NULL. Session cookie is cleared in the response.
+
 ## Pending inputs from owner
+- APPLY_ENABLED=true when apply flow is whitelisted (still set false on 0001)
 - General Business program requirements (SF side not finalized — portal shows "coming soon")
 - Twilio creds: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SID` in `.env.local`
+  (reminders additionally need `TWILIO_FROM` or `TWILIO_MESSAGING_SID`, + `PORTAL_BASE_URL`)
 - Custom chatbot endpoint → `BOT_ENDPOINT` (POST `{message, user}` → `{reply}`)

@@ -3,8 +3,9 @@ import { getSessionUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { q, ah } from "@/lib/db";
 import { findContactById, contactApplications } from "@/lib/sf";
+import { studentChecklist, checklistCounts } from "@/lib/checklist";
 import { Card, Pill, PageHeader, statusTone } from "@/components/ui";
-import { IconArrowR, IconCheckCircle, IconDoc, IconWarn } from "@/components/icons";
+import { IconArrowR, IconDoc } from "@/components/icons";
 import { MascotCard, MascotState } from "@/components/Mascot";
 import { ShareButton } from "@/components/ShareButton";
 
@@ -18,13 +19,10 @@ export default async function PortalHome() {
   const contact = link?.sf_contact_id ? await findContactById(link.sf_contact_id) : null;
   const sfApps = link?.sf_contact_id ? await contactApplications(link.sf_contact_id) : [];
   const app = (await q(`SELECT * FROM ${ah("portal_applications")} WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1`, [user.id])).rows[0];
-  const checklist = await q<{ status: string; n: number }>(
-    `SELECT status, count(*)::int AS n FROM ${ah("portal_checklist_items")} WHERE user_id=$1 GROUP BY 1`, [user.id]);
+  const cl = await studentChecklist(user.id);
+  const { done, total, pct } = checklistCounts(cl.items);
   const docs = (await q<{ n: number }>(`SELECT count(*)::int AS n FROM ${ah("portal_documents")} WHERE user_id=$1`, [user.id])).rows[0]?.n ?? 0;
-
-  const done = checklist.rows.filter((r) => ["approved", "waived"].includes(r.status)).reduce((a, r) => a + r.n, 0);
-  const total = checklist.rows.reduce((a, r) => a + r.n, 0);
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  const applyEnabled = process.env.APPLY_ENABLED === "true";
   const first = (user.display_name || contact?.FirstName || "there").split(" ")[0];
 
   const hasApp = !!app || sfApps.length > 0;
@@ -34,16 +32,6 @@ export default async function PortalHome() {
   return (
     <div className="space-y-5">
       <PageHeader title={`Hi, ${first}`} sub="Here's where your application stands." />
-
-      {link?.status === "pending_review" && (
-        <Card className="flex items-start gap-3 border-accent/40 bg-accent/[0.03] p-4">
-          <IconWarn className="mt-0.5 shrink-0 text-accent" width={18} height={18} />
-          <div className="text-sm">
-            <span className="font-medium">We're verifying your record.</span>{" "}
-            <span className="text-mute">Part of your info matched an existing record — an advisor is double-checking the link.</span>
-          </div>
-        </Card>
-      )}
 
       {/* requirements overview — only once they've applied */}
       {hasApp && (
@@ -72,17 +60,21 @@ export default async function PortalHome() {
         title={!hasApp ? "No application yet…" : finished ? "You did it, Red Raider!" : "Keep going — you're getting there!"}
         sub={
           !hasApp
-            ? "Raider Red is sitting here waiting on you. Pick a program, hit apply, and let's get you to Texas Tech."
+            ? applyEnabled
+              ? "Raider Red is sitting here waiting on you. Pick a program, hit apply, and let's get you to Texas Tech."
+              : "Raider Red is sitting here waiting on you. Your application journey starts soon — we'll light this up when it's ready."
             : finished
               ? "Everything's submitted and approved. An advisor will reach out soon — time to celebrate!"
               : `${pct}% of your requirements are done${docs ? ` · ${docs} document${docs === 1 ? "" : "s"} uploaded` : ""}. Every item checked off gets you closer.`
         }
         action={
           !hasApp ? (
-            <Link href="/portal/apply" data-track="mascot-start"
-              className="inline-flex w-full items-center justify-center gap-2 bg-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-accent-dim sm:w-auto">
-              Start my application <IconArrowR width={15} height={15} />
-            </Link>
+            applyEnabled ? (
+              <Link href="/portal/apply" data-track="mascot-start"
+                className="inline-flex w-full items-center justify-center gap-2 bg-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:bg-accent-dim sm:w-auto">
+                Start my application <IconArrowR width={15} height={15} />
+              </Link>
+            ) : undefined
           ) : (
             <>
               <Link href={finished ? "/portal/messages" : "/portal/checklist"} data-track="mascot-checklist"
@@ -94,23 +86,6 @@ export default async function PortalHome() {
           )
         }
       />
-
-      {/* linked record */}
-      {contact && (
-        <Card className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold uppercase tracking-wide text-mute">Linked university record</div>
-            <Pill tone={link.status === "confirmed" ? "ok" : link.status === "pending_review" ? "warn" : "outline"}>
-              {link.status === "confirmed" ? "verified" : link.status === "pending_review" ? "verifying" : "linked"}
-            </Pill>
-          </div>
-          <div className="mt-2 flex items-center gap-2 text-sm">
-            <IconCheckCircle width={16} height={16} className="text-ink" />
-            <span className="font-medium">{contact.Name}</span>
-            <span className="text-mute">· {contact.status || contact.record_type} · {contact.term || "—"}</span>
-          </div>
-        </Card>
-      )}
 
       {/* all SF applications */}
       {sfApps.length > 0 && (

@@ -85,11 +85,17 @@ export function scoreFields(
   c: SfContact
 ): { fields: MatchFields; confidence: number } {
   const digits = normalizePhone(u.phone);
+  // SF Name order isn't reliable in this data (leads land as "Last First" while
+  // signups type "First Last", and some contacts only populate Name) — so a name
+  // field also counts if it's a token of the full display Name.
+  const nameTokens = new Set((c.Name ?? "").toLowerCase().split(/\s+/).filter(Boolean));
+  const uLast = (u.last ?? "").trim().toLowerCase();
+  const uFirst = (u.first ?? "").trim().toLowerCase();
   const fields: MatchFields = {
     email: !!u.email && (c.emails ?? []).includes(u.email.trim().toLowerCase()),
     phone: !!digits && (c.phones ?? []).includes(digits),
-    last_name: !!u.last && (eq(u.last, c.LastName) || eq(u.last, c.former_last)),
-    first_name: !!u.first && (eq(u.first, c.FirstName) || eq(u.first, c.pref_first) || eq(u.first, c.nickname)),
+    last_name: !!uLast && (eq(u.last, c.LastName) || eq(u.last, c.former_last) || nameTokens.has(uLast)),
+    first_name: !!uFirst && (eq(u.first, c.FirstName) || eq(u.first, c.pref_first) || eq(u.first, c.nickname) || nameTokens.has(uFirst)),
   };
   const confidence =
     (fields.email ? MATCH_WEIGHTS.email : 0) +
@@ -115,9 +121,11 @@ export async function scoreCandidates(u: {
       WHERE (NULLIF($1,'') IS NOT NULL AND lower($1) = ANY(c.emails))
          OR (NULLIF($2,'') IS NOT NULL AND $2 = ANY(c.phones))
          OR (NULLIF($3,'') IS NOT NULL AND
-             (lower(c.last_name) = $3 OR lower(c.former_last) = $3))
+             (lower(c.last_name) = $3 OR lower(c.former_last) = $3
+              OR $3 = ANY(string_to_array(lower(c.name), ' '))))
          OR (NULLIF($4,'') IS NOT NULL AND
-             (lower(c.first_name) = $4 OR lower(c.pref_first) = $4 OR lower(c.nickname) = $4))
+             (lower(c.first_name) = $4 OR lower(c.pref_first) = $4 OR lower(c.nickname) = $4
+              OR $4 = ANY(string_to_array(lower(c.name), ' '))))
       LIMIT 200`,
     [(u.email || "").trim().toLowerCase(), digits, last, first]
   );
@@ -233,10 +241,11 @@ export interface SfChecklistItem {
   done: boolean;
 }
 
+// Anchored matches: 'Not Received'/'Not Started' must NOT count as done.
 export const CHECKLIST_DONE = `(
   is_closed OR waived OR not_required
-  OR status ~* 'received|complete|approved|waived|satisfied'
-  OR NULLIF(item_received,'') IS NOT NULL
+  OR status ~* '^(completed|received|approved|waived|satisfied|complete)'
+  OR item_received ~* '^(received|waived|yes|complete)'
 )`;
 
 export async function checklistForApplication(appId: string): Promise<SfChecklistItem[]> {

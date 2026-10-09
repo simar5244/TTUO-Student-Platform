@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireApiUser, isResp, json, bad, audit } from "@/lib/api";
-import { q, ah } from "@/lib/db";
-import { scoreCandidates, scoreFields, splitName, findContactById, searchWarehouseContacts, ensureCloned } from "@/lib/sf";
+import { q, ah, whPool } from "@/lib/db";
+import { scoreCandidates, scoreFields, splitName, findContactById, searchWarehouseContacts, ensureCloned, contactApplications, checklistForApplication } from "@/lib/sf";
 import { refreshProjectionForContact } from "@/lib/sync";
 
 const ROLE = ["manager", "admin"] as const;
@@ -22,6 +22,40 @@ export async function GET(req: NextRequest) {
   if (browse && browse.trim().length >= 3) {
     const rows = await searchWarehouseContacts(browse.trim());
     return json({ browse: rows });
+  }
+
+  // ?preview=<sfContactId> — full detail for the link modal: contact, their SF
+  // applications, and checklist progress. Reads the clone; if the contact isn't
+  // in the slice yet, falls back to a live warehouse row.
+  const preview = req.nextUrl.searchParams.get("preview");
+  if (preview) {
+    let contact = await findContactById(preview);
+    if (!contact) {
+      // outside the clone slice — read the raw warehouse row for the preview
+      const { rows } = await whPool().query(
+        `SELECT c."Id" AS "Id", c."Name" AS "Name", c."FirstName" AS "FirstName",
+                c."LastName" AS "LastName", c."Email" AS "Email",
+                c."MobilePhone" AS "MobilePhone", c."Phone" AS "Phone",
+                c."TargetX_SRMb__Status__c" AS status, rt."Name" AS record_type,
+                c."TargetX_SRMb__Anticipated_Start_Term__c" AS term,
+                c."LeadSource" AS lead_source, c."MailingCity" AS city,
+                c."MailingState" AS state, c."CreatedDate" AS created
+         FROM ${process.env.SF_SCHEMA || "sf_origin"}.contact c
+         LEFT JOIN ${process.env.SF_SCHEMA || "sf_origin"}.recordtype rt ON rt."Id" = c."RecordTypeId"
+         WHERE c."Id" = $1`, [preview]);
+      contact = rows[0] ?? null;
+    }
+    if (!contact) return bad("contact not found", 404);
+    const applications = await contactApplications(preview).catch(() => []);
+    const latest = applications[0];
+    const checklist = latest ? await checklistForApplication(latest.id).catch(() => []) : [];
+    return json({
+      contact,
+      applications,
+      checklist_done: checklist.filter((i) => i.done).length,
+      checklist_total: checklist.filter((i) => !i.not_required).length,
+      checklist_items: checklist,
+    });
   }
 
   const pending = await q<{
@@ -45,10 +79,11 @@ export async function GET(req: NextRequest) {
     return { ...r, contact, live_fields: scored?.fields ?? null, live_confidence: scored?.confidence ?? r.confidence };
   }));
 
-  // suggestions for unlinked (top-5 candidates each, with per-field evidence)
+  // suggestions for unlinked (all scored candidates each, with per-field
+  // evidence — the page groups them by which fields matched)
   const unlinkedEnriched = await Promise.all(unlinked.rows.map(async (r) => ({
     ...r,
-    candidates: (await scoreCandidates(userSignals(r))).slice(0, 5)
+    candidates: (await scoreCandidates(userSignals(r))).slice(0, 12)
       .map((c) => ({ ...c.contact, fields: c.fields, confidence: c.confidence })),
   })));
 
@@ -63,10 +98,14 @@ export async function GET(req: NextRequest) {
     return { ...r, contact, live_fields: scored?.fields ?? null };
   }));
 
+  // everyone currently linked — auto (full/pair once verified), manual —
+  // so confirmed links stay visible instead of vanishing from the page
   const auto = await q(
     `SELECT l.*, u.email, u.display_name FROM ${ah("portal_identity_links")} l
      JOIN ${ah("portal_users")} u ON u.id=l.user_id
-     WHERE l.match_type='auto_full' AND l.status='active' ORDER BY l.created_at DESC LIMIT 50`);
+     WHERE l.match_type IN ('auto_full','auto_pair','manual') AND l.status IN ('active','confirmed')
+       AND NOT l.flagged
+     ORDER BY l.reviewed_at DESC NULLS LAST, l.created_at DESC LIMIT 50`);
   const autoEnriched = await Promise.all(auto.rows.map(async (r) => ({
     ...r, contact: r.sf_contact_id ? await findContactById(r.sf_contact_id) : null,
   })));
@@ -88,6 +127,11 @@ export async function POST(req: NextRequest) {
     await q(`UPDATE ${ah("portal_identity_links")} SET status=$2, reviewed_by=$3, reviewed_at=now(), note=$4 WHERE id=$1`,
       [body.linkId, st, user.id, body.note ?? null]);
     const link = (await q(`SELECT sf_contact_id, user_id FROM ${ah("portal_identity_links")} WHERE id=$1`, [body.linkId])).rows[0];
+    if (st === "rejected" && link?.user_id) {
+      // rejected candidate drops the user back into the unlinked lane
+      await q(`INSERT INTO ${ah("portal_identity_links")} (user_id, match_type, match_fields, status, confidence)
+               VALUES ($1,'none','{}','active',0)`, [link.user_id]);
+    }
     if (link?.sf_contact_id) await refreshProjectionForContact(link.sf_contact_id).catch(() => {});
     if (st === "confirmed" && link?.sf_contact_id) {
       await q(`INSERT INTO ${ah("portal_outbox")} (entity_type, entity_id, action, payload, actor_id)
@@ -140,8 +184,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === "unlink") {
+    const link = (await q(`SELECT sf_contact_id, user_id FROM ${ah("portal_identity_links")} WHERE id=$1`, [body.linkId])).rows[0];
     await q(`UPDATE ${ah("portal_identity_links")} SET status='rejected', reviewed_by=$2, reviewed_at=now() WHERE id=$1`, [body.linkId, user.id]);
-    const link = (await q(`SELECT sf_contact_id FROM ${ah("portal_identity_links")} WHERE id=$1`, [body.linkId])).rows[0];
+    if (link?.user_id) {
+      await q(`INSERT INTO ${ah("portal_identity_links")} (user_id, match_type, match_fields, status, confidence)
+               VALUES ($1,'none','{}','active',0)`, [link.user_id]);
+    }
     if (link?.sf_contact_id) await refreshProjectionForContact(link.sf_contact_id).catch(() => {});
     return json({ ok: true });
   }

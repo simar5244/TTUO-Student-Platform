@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
 
   // -- record what they intend to apply for; send them to RaiderConnect ------
   if (body.action === "intent") {
+    if (process.env.APPLY_ENABLED !== "true") return bad("Applications aren't open right now", 403);
     const { program_label, modality, term, term_id } = body;
     if (!program_label) return bad("pick a program");
     const cur = (await q<{ id: string; status: string }>(

@@ -12,11 +12,12 @@ export default function MessagesPage() {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [claimed, setClaimed] = useState(false);
-  const bottom = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const firstLoad = useRef(true);
   const lastId = useRef(0);
 
   async function poll() {
-    const r = await fetch(`/api/chat?after=${lastId.current}`);
+    const r = await fetch(`/api/chat?after=${lastId.current}`, { cache: "no-store" });
     const d = await r.json();
     if (d.thread) setClaimed(!!d.thread.claimed_by);
     if (d.messages?.length) {
@@ -31,7 +32,12 @@ export default function MessagesPage() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length]);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: firstLoad.current ? "instant" : "smooth" });
+    firstLoad.current = false;
+  }, [msgs.length]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -48,11 +54,11 @@ export default function MessagesPage() {
     <div className="flex h-[calc(100dvh-8.5rem)] flex-col sm:h-[calc(100dvh-10rem)]">
       <PageHeader title="Messages" sub={claimed ? "Connected with an advisor" : "Raider Red + advisors"} />
 
-      <div className="flex-1 space-y-3 overflow-y-auto rounded-lg border border-line bg-smoke/40 p-4">
+      <div ref={box} className="flex-1 space-y-3 overflow-y-auto rounded-lg border border-line bg-smoke/40 p-4">
         {!msgs.length && (
           <div className="flex h-full flex-col items-center justify-center text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={asset("/mascot/encourage.png")} alt="Raider Red" className="h-24 w-24 object-contain" />
+            <img src={asset("/mascot/encourage.png")} alt="Raider Red" style={{ mixBlendMode: "multiply" }} className="h-24 w-24 object-contain" />
             <p className="mt-3 max-w-xs text-sm text-mute">Raider Red is here! Ask anything about your application, requirements, or deadlines.</p>
           </div>
         )}
@@ -61,6 +67,10 @@ export default function MessagesPage() {
             {m.sender_kind === "bot" && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={asset("/mascot/encourage.png")} alt="Raider Red" className="mr-2 mt-1 h-8 w-8 shrink-0 rounded-full border border-line bg-white object-cover object-top" />
+            )}
+            {m.sender_kind === "admin" && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={asset("/logo.png")} alt="Texas Tech advisor" className="mr-2 mt-1 h-8 w-8 shrink-0 rounded-full border border-line bg-white object-contain p-0.5" />
             )}
             <div className={`max-w-[80%] rounded-lg px-3.5 py-2.5 text-sm leading-relaxed ${
               m.sender_kind === "student" ? "rounded-br-sm bg-ink text-white"
@@ -75,7 +85,6 @@ export default function MessagesPage() {
             </div>
           </div>
         ))}
-        <div ref={bottom} />
       </div>
 
       <form onSubmit={send} className="mt-3 flex gap-2">

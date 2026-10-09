@@ -316,6 +316,71 @@ A student can also upload straight to the portal for an open requirement; that
 upload counts as \emph{submitted with us} until Salesforce parity confirms it
 (next section).
 
+\section{Why the Checklist Is Built This Way --- the psychology}
+
+Because TTU Online charges no application fee, nothing financial stops an
+applicant from drifting away mid-checklist --- so the checklist is designed
+around four well-studied behavioral effects rather than around reminders that
+get ignored.
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Endowed progress} (Nunes \& Dr\`eze, \emph{Journal of Consumer
+        Research}, 2006 --- the car-wash study: a ten-stamp card with two free
+        stamps fills faster than an eight-stamp card). Progress that
+        \emph{appears already started} reframes the task as ``in progress,''
+        not ``not begun.'' A new student's checklist therefore never starts at
+        zero: ``Create your portal account'' and ``Submit your application''
+        are real milestones counted in the same denominator as the requirement
+        rows, so a signed-up applicant opens the page at \texttt{2 of 6}, not
+        \texttt{0 of 4}. Both milestones reflect genuine completed work --- no
+        fabricated credit.
+  \item \textbf{Goal gradient} (Kivetz, Urminsky \& Zheng, \emph{Journal of
+        Marketing Research}, 2006 --- people accelerate as a goal gets closer).
+        The header copy changes with distance: ``$n$ of $m$ complete'' early,
+        ``1 item left --- you're almost there'' at the end, and the single next
+        action is surfaced beside the progress bar so the closest item gets the
+        attention.
+  \item \textbf{Open loops} (the Zeigarnik effect, 1927 --- unfinished tasks
+        stay mentally active, but only while they're visible). Remaining items
+        stay on screen; items confirmed received by Texas Tech trigger a
+        one-time ``Texas Tech received\ldots'' callout so completion feels like
+        an event. Guardrail: this effect is debated in the literature and only
+        honest remaining work is ever shown --- fake ``80\% done'' loops are a
+        dark pattern and were deliberately not used.
+  \item \textbf{Personalized, actionable nudges} --- Castleman \& Page's
+        ``summer melt'' texting studies lifted enrollment with status-aware
+        messages carrying a concrete next step, while large randomized trials
+        (Oreopoulos et al.; the College Board RYCP trial on $\sim$785{,}000
+        students) found generic informational blasts produce roughly nothing.
+        The practical rule the portal follows: every nudge names the specific
+        outstanding item and a direct action, and stalled students surface to a
+        human in Tickets rather than receiving automation-only contact.
+        Literal daily streaks and loss-aversion mechanics (Duolingo-style)
+        were evaluated and rejected --- admissions has no daily action to
+        streak on, and punishing a stalled applicant only increases
+        abandonment.
+\end{itemize}
+
+\subsection{What this looks like in the interface}
+
+A slim progress bar sits atop the checklist page with the honest count
+(\texttt{2 of 6}), the next action named beside it, and milestone callouts
+when the sync engine flips a requirement to received. No gamification chrome
+beyond that --- the design stays minimal on purpose, since clutter itself is a
+documented abandonment driver.
+
+\subsection{Deletion and data minimization}
+
+Profile deletion is real deletion, not deactivation: the \texttt{portal\_users}
+row is removed, cascading through identity links, applications, checklist
+items, documents (files are unlinked from disk first), chat threads, and the
+contact projection; activity-log rows keep their anonymized shell via
+\texttt{ON DELETE SET NULL} so the audit trail survives without retaining the
+person. The student's official Texas Tech record in Salesforce is untouched ---
+the portal was never the system of record. Consistent with the terms page, no
+data beyond first name, email, phone, and uploaded documents is collected, and
+no feature asks for more.
+
 \section{Step 5 --- Documents}
 
 Students upload files (PDF, JPG, PNG, HEIC, DOC, DOCX --- up to 15\,MB each),

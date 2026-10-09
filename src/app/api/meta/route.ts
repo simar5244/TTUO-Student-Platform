@@ -34,5 +34,6 @@ export async function GET() {
     contactStatuses: vals(contactStatuses),
     contactTerms: vals(contactTerms),
     recordTypes,
+    applyEnabled: process.env.APPLY_ENABLED === "true",
   });
 }
